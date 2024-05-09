@@ -14477,10 +14477,10 @@
 	
 		/* Features */
 		"sWrapper": "dataTables_wrapper",
-		"sFilter": "dataTables_filter",
+		// "sFilter": "dataTables_filter",
 		"sInfo": "dataTables_info",
 		"sPaging": "dataTables_paginate paging_", /* Note that the type is postfixed */
-		"sLength": "dataTables_length",
+		// "sLength": "dataTables_length",
 		"sProcessing": "dataTables_processing",
 	
 		/* Sorting */
@@ -14493,10 +14493,10 @@
 		"sSortColumn": "sorting_", /* Note that an int is postfixed for the sorting order */
 	
 		/* Filtering */
-		"sFilterInput": "",
+		// "sFilterInput": "",
 	
 		/* Page length */
-		"sLengthSelect": "",
+		// "sLengthSelect": "",
 	
 		/* Scrolling */
 		"sScrollWrapper": "dataTables_scroll",
