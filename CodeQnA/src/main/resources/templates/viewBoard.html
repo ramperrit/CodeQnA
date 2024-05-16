@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<style>
+    .attachment {
+        margin-left: 10px;
+    }
+
+    li {
+        list-style-type: none;
+    }
+</style>
+
+<script>
+    // JavaScript로 버튼을 클릭할 때마다 색상을 변경하고 좋아요 카운트를 증가 또는 감소시킵니다.
+    document.addEventListener("DOMContentLoaded", function() {
+        var heartButton = document.getElementById("heartButton");
+        var heartIcon = document.getElementById("heartIcon");
+        var likeCount = document.getElementById("likeCount");
+        var isLiked = false;
+        var count = parseInt(likeCount.innerText);
+
+        heartButton.addEventListener("click", function() {
+            if (isLiked) {
+                // 좋아요 취소
+                heartIcon.classList.remove("fas", "text-danger");
+                heartIcon.classList.add("far");
+                count--;
+            } else {
+                // 좋아요
+                heartIcon.classList.remove("far");
+                heartIcon.classList.add("fas", "text-danger");
+                count++;
+            }
+            likeCount.innerText = count;
+            isLiked = !isLiked;
+        });
+    });
+</script>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>게시물 상세 페이지</title>
+
+    <!-- Custom fonts for this template-->
+    <link href="/vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
+    <link
+            href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i"
+            rel="stylesheet">
+
+    <!-- Custom styles for this template-->
+    <link href="/css/sb-admin-2.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <!--&lt;!&ndash; TUI 에디터 JS CDN &ndash;&gt;
+    <script src="https://uicdn.toast.com/editor/latest/toastui-editor-all.min.js"></script>
+    &lt;!&ndash; TUI 에디터 CSS CDN &ndash;&gt;
+    <link rel="stylesheet" href="https://uicdn.toast.com/editor/latest/toastui-editor.min.css" />-->
+
+</head>
+
+<body>
+<div id="wrapper">
+    <!-- content wrapper -->
+    <div id="content-wrapper" class="d-flex flex-column">
+        <!-- main content -->
+        <div id="content">
+            <!-- header -->
+            <div th:include="~{fragments/header :: #header}"></div>
+            <br>
+            <!-- page heading -->
+            <div class="container-fluid">
+                <h1 class="h3 mb-1 text-gray-800" th:text="${board.title}"></h1>
+                <div class="row">
+                    <div class="col-lg-4">
+                        <p th:inline="text">글쓴이 | [[${board.nickname}]]</p>
+                    </div>
+                    <div class="col-lg-4">
+                        <p>작성일 | 2024.05.09 12:26:45</p>
+                    </div>
+                    <div class="col-lg-4">
+                        <p th:inline="text">조회 수 | [[${board.hitcount}]]</p>
+                    </div>
+                </div>
+
+                <!-- 본문 부분 -->
+                <div class="card">
+                    <div class="card-body">
+                        This is some text within a card body.
+                        This is some text within a card body.
+                        This is some text within a card body.
+                        This is some text within a card body.
+                        This is some text within a card body.
+                        This is some text within a card body.
+                        This is some text within a card body.
+                        This is some text within a card body.
+                        This is some text within a card body.
+                        This is some text within a card body.
+
+                    </div>
+                </div>
+                <!-- 본문이 들어갈 toast UI Editor-->
+                <!-- 원래는 editor가 들어가지 않지만 본문 표시를 위해 임시로 해 놓음-->
+                <!--<div id="editorcontent">
+
+                </div>-->
+                <br>
+
+                <!-- heart button -->
+                <div class="row justify-content-center align-items-center">
+                    <button id="heartButton" class="btn btn-dark btn-circle btn-lg">
+                        <i id="heartIcon" class="fas fa-heart"></i>
+                    </button>
+                    <h3 id="likeCount" style="margin-bottom: 0; margin-left: 15px;">25</h3>
+                </div>
+
+                <!-- 해시태그, 수정/삭제/목록 버튼 -->
+                <br>
+                <div class="row">
+                    <div th:each="hashtag : ${hashtags}">
+                        <!--<span th:text="${hashtag}"></span>-->
+                        <a href="#" th:inline="text" style="margin-right: 5px;">#[[${hashtag}]]</a>
+                    </div>
+
+                    <div class="col text-right">
+                        <a class="btn btn-primary" href="/modifyboard">수정</a>
+                        <button class="btn btn-danger">삭제</button>
+                        <button class="btn btn-secondary">목록</button>
+                    </div>
+                </div>
+                <hr>
+                <!-- 첨부 파일 목록 -->
+                <div class="row justify-content-center">
+                    <!-- 예시: 이미지 파일 -->
+                    <div class="attachment">
+                        <i class="bi bi-card-image"></i>
+                        <span class="file-name">image1.jpg</span>
+                    </div>
+                    <!-- 예시: 일반 파일 -->
+                    <div class="attachment">
+                        <i class="bi bi-file-earmark"></i>
+                        <span class="file-name">document.pdf</span>
+                    </div>
+                </div>
+
+                <!-- 댓글 작성 -->
+                <hr style="height: 3px; background-color: #007bff;">
+                <div class="input-group mb-3">
+                    <input type="text" class="form-control" placeholder="댓글 내용을 입력하세요." aria-label="Recipient's username" aria-describedby="button-addon2">
+                    <button class="btn btn-secondary" type="button" id="button-addon1">댓글 등록</button>
+                </div>
+
+                <!-- 댓글 목록 -->
+                <hr style="height: 3px; background-color: #007bff;">
+                <h3 class="mb-4">
+                    댓글 목록
+                </h3>
+                <div class="row">
+                    <div class="col-2">
+                        <h4>작성자</h4>
+                    </div>
+                    <div class="col-7">
+
+                    </div>
+                    <div class="col-1">
+                        <h4>작성일</h4>
+                    </div>
+                    <div class="col-2"></div>
+                </div>
+                <hr>
+                <div class="comment_box">
+                    <ul class="comment_list">
+                        <li class="row">
+                            <div class="col-md-2">
+                                전찬용
+                            </div>
+                            <div class="col-md-7">
+                                html 너무 어렵당
+                            </div>
+                            <div class="col-md-2">
+                                2024:17:14
+                            </div>
+                            <div class="col-md-1">
+                                <button class="btn btn-danger btn-sm">삭제</button>
+                            </div>
+                        </li>
+                        <li class="row">
+                            <p class="col-md-2" data-bs-toggle="collapse" href="#collapseExample" role="button">댓글 쓰기</p>
+                            <div class="collapse col-md-10" id="collapseExample">
+                                <div class="input-group mb-3">
+                                    <input type="text" class="form-control" placeholder="댓글 내용을 입력하세요." aria-label="Recipient's username" aria-describedby="button-addon2">
+                                    <button class="btn btn-secondary" type="button" id="button-addon2">댓글 등록</button>
+                                </div>
+                            </div>
+                        </li>
+
+                        <li class="row">
+                            <div class="col-md-2">
+                                백민규
+                            </div>
+                            <div class="col-md-7">
+                                룰루랄라
+                            </div>
+                            <div class="col-md-2">
+                                2024:19:14
+                            </div>
+                            <div class="col-md-1">
+                                <button class="btn btn-danger btn-sm">삭제</button>
+                            </div>
+                        </li>
+                        <li class="row">
+                            <p class="col-md-2" data-bs-toggle="collapse" href="#collapseExample2" role="button">댓글 쓰기</p>
+                            <div class="collapse col-md-10" id="collapseExample2">
+                                <div class="input-group mb-3">
+                                    <input type="text" class="form-control" placeholder="댓글 내용을 입력하세요." aria-label="Recipient's username" aria-describedby="button-addon2">
+                                    <button class="btn btn-secondary" type="button" id="button-addon3">댓글 등록</button>
+                                </div>
+                            </div>
+                        </li>
+
+                    </ul>
+                </div>
+                <!-- end reply-->
+            </div>
+            <div th:include="~{fragments/footer :: #footer}"></div>
+        </div>
+        <!-- end main content -->
+    </div>
+    <!-- end content wrapper -->
+</div>
+</body>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+</html>
