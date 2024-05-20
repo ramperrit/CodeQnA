@@ -38,27 +38,6 @@
     <link href="/handle-counter/app/css/handle-counter.css" rel="stylesheet">
     <script src="http://code.jquery.com/jquery-1.12.4.min.js"></script>
     <script src="/handle-counter/app/js/handleCounter.js"></script>
-    <script>
-        $(function ($) {
-            var options = {
-                minimum: 1,
-                maximize: 5,
-                onChange: valChanged,
-                onMinimum: function(e) {
-                    console.log('reached minimum: '+e)
-                },
-                onMaximize: function(e) {
-                    console.log('reached maximize'+e)
-                }
-            }
-            $('#handleCounter').handleCounter(options)
-            $('#handleCounter2').handleCounter(options)
-            $('#handleCounter3').handleCounter({maximize: 100})
-        })
-        function valChanged(d) {
-//            console.log(d)
-        }
-    </script>
 
 </head>
 
@@ -93,7 +72,7 @@
                                 <p class="text-lg text-gray-900">첨부파일 개수</p>
                                 <div class="handle-counter" id="handleCounter">
                                     <button type="button" class="counter-minus btn btn-primary" style="margin-right: 2px">-</button>
-                                    <input type="text" style="margin-top: 1px" value="3">
+                                    <input type="text" style="margin-top: 1px" value="3" id="maxfilenum">
                                     <button type="button" class="counter-plus btn btn-primary" style="margin-left: 2px">+</button>
                                 </div>
 
@@ -103,7 +82,7 @@
                                 <label>
                                     <p class="text-lg text-gray-900">첨부파일 최대용량</p>
                                     <div class="d-flex align-items-center">
-                                        <select name="dataTable_length" aria-controls="dataTable" class="custom-select custom-select-sm form-control form-control-sm">
+                                        <select name="dataTable_length" aria-controls="dataTable" class="custom-select custom-select-sm form-control form-control-sm" id="maxfilesize">
                                             <option value="5">5</option>
                                             <option value="10">10</option>
                                             <option value="20">20</option>
@@ -155,7 +134,7 @@
                             </div>
                         </div>
                         <div class="text-center">
-                        <button class="btn-primary btn-lg">설정 저장</button>
+                            <button class="btn-primary btn-lg">설정 저장</button>
                         </div>
                     </form>
 
@@ -180,6 +159,66 @@
 <a class="scroll-to-top rounded" href="#page-top">
     <i class="fas fa-angle-up"></i>
 </a>
+
+<script>
+    $(function ($) {
+        var options = {
+            minimum: 1,
+            maximize: 5,
+            onChange: valChanged,
+            onMinimum: function(e) {
+                console.log('reached minimum: '+e)
+            },
+            onMaximize: function(e) {
+                console.log('reached maximize'+e)
+            }
+        }
+        $('#handleCounter').handleCounter(options)
+    })
+    function valChanged(d) {
+        // console.log(d)
+    }
+
+    function getFormData() {
+        const maxFileNum = document.getElementById('maxfilenum').value;
+        const maxFileSize = document.getElementById('maxfilesize').value;
+        const checkboxes = document.querySelectorAll('.form-check-input');
+        let fileExt = [];
+        checkboxes.forEach((checkbox) => {
+            if (checkbox.checked) {
+                fileExt.push(checkbox.id.replace('Check', ''));
+            }
+        });
+
+        return {
+            maxFileNum: maxFileNum,
+            maxFileSize: maxFileSize,
+            fileExt: fileExt.join(',')
+        };
+    }
+
+    document.querySelector('form').addEventListener('submit', function(event) {
+        event.preventDefault(); // 기본 폼 제출 방지
+        const formData = getFormData();
+
+        fetch('/saveFileConfig', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        }).then(response => {
+            if (response.ok) {
+                alert('설정이 저장되었습니다.');
+            } else {
+                alert('설정 저장에 실패했습니다.');
+            }
+        }).catch(error => {
+            console.error('Error:', error);
+            alert('설정 저장 중 오류가 발생했습니다.');
+        });
+    });
+</script>
 
 </body>
 

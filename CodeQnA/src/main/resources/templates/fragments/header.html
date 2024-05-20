@@ -26,7 +26,10 @@
 <div id="header">
     <nav class="navbar navbar-expand-lg bg-gradient-primary">
         <div class="container-fluid">
-            <a class="navbar-brand" href="/main" style="color: white">Code Q&A</a>
+            <a class="navbar-brand" sec:authorize="isAnonymous()" href="/main" style="color: white">Code Q&A</a>
+            <a class="navbar-brand" sec:authorize="hasAnyAuthority('ROLE_USER')" href="/Loginmain" style="color: white">Code Q&A</a>
+            <a class="navbar-brand" sec:authorize="hasAnyAuthority('ROLE_ADMIN')" href="/Loginmain" style="color: white">Code Q&A</a>
+            <input type="hidden" id="nickname" th:value="${nickname}">
             <div class="collapse navbar-collapse" id="navbarNavDropdown">
                 <ul class="navbar-nav mr-auto">
 
@@ -51,7 +54,7 @@
 
                     <!--마이페이지-->
                     <li class="nav-item" sec:authorize="hasAnyAuthority('ROLE_USER')">
-                        <a class="nav-link" href="/mypage" style="color: white">MyPage</a>
+                        <a class="nav-link" href="/users/mypage" style="color: white">MyPage</a>
                     </li>
                     <!--로그인/로그아웃-->
                     <li class="nav-item" style="text-align: right;" sec:authorize="isAnonymous()">
@@ -65,6 +68,7 @@
                         <a class="nav-link" href="/users/signup" style="color: white;">Signup</a>
                     </li>
                 </ul>
+
             </div>
         </div>
     </nav>

@@ -26,11 +26,11 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception{
 
-//        http.csrf(csrf -> csrf.disable());
+        http.csrf(csrf -> csrf.disable());
 
         http.formLogin((it) -> it
                 .loginPage("/users/login")
-                .defaultSuccessUrl("/main")
+                .defaultSuccessUrl("/Loginmain")
                 .usernameParameter("email")
                 .failureUrl("/users/login/error")
         );
@@ -45,7 +45,12 @@ public class SecurityConfig {
                 .requestMatchers(antMatcher("/main")).permitAll()
                 .requestMatchers(antMatcher("/users/**")).permitAll()
                 .requestMatchers(antMatcher("/img/**")).permitAll()
+                .requestMatchers(antMatcher("/vendor/**")).permitAll()
+                .requestMatchers(antMatcher("/boardAPI/**")).permitAll()
+                .requestMatchers(antMatcher("/fileAPI/**")).permitAll()
+                .requestMatchers(antMatcher("/viewboard/**")).permitAll()
                 .requestMatchers(antMatcher("/admin/**")).hasRole("ADMIN")
+                .requestMatchers(antMatcher("/Loginmain")).hasAnyRole("USER","ADMIN")
 
                 .anyRequest().authenticated();
         });

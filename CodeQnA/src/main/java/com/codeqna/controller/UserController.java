@@ -6,12 +6,18 @@ import com.codeqna.repository.UserRepository;
 import com.codeqna.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @RequestMapping("/users")
 @Controller
@@ -22,9 +28,12 @@ public class UserController {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    @GetMapping("/checkNickname")
-    public boolean checkNickname(@RequestParam("nickname") String nickname){
-        return userService.isNicknameExist(nickname);
+    @GetMapping("/{nickname}/exist")
+    public ResponseEntity<Map<String, Boolean>> checkNicknameExists(@PathVariable String nickname) {
+        boolean exists = userService.nicknameExists(nickname);
+        Map<String, Boolean> response = new HashMap<>();
+        response.put("exists", exists);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/signup")
@@ -64,5 +73,17 @@ public class UserController {
         model.addAttribute("loginErrorMsg", "이메일 또는 비밀번호를 확인해주세요");
         return "/user/login";
     }
+
+    @GetMapping("/mypage")
+    public String mypage(Model model){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
+        Users users = userRepository.findByEmail(email);
+        model.addAttribute("nickname", users.getNickname());
+        model.addAttribute("email",users.getEmail());
+        model.addAttribute("regdate",users.getRegdate());
+        return "user/mypage";
+    }
+
 
 }

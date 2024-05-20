@@ -45,7 +45,7 @@
 
                         <!-- 취소버튼 -->
                         <div class="col-sm-3 text-right">
-                            <a href="boardlist" class="btn btn-danger btn-icon-split">
+                            <a th:href="@{/viewboard/{bno}(bno=${board.bno})}" class="btn btn-danger btn-icon-split">
                                 <span class="text">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;취소 버튼&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
                             </a>
                         </div>

@@ -11,6 +11,8 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.DynamicInsert;
 import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDateTime;
@@ -22,11 +24,12 @@ import java.time.LocalDateTime;
 @Builder
 @Table(name = "users")
 @DynamicInsert
+@EntityListeners(AuditingEntityListener.class)
 public class Users {
 
     @Id
     @Column
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(name = "email", unique = true, nullable = false)
@@ -46,12 +49,16 @@ public class Users {
     private String kakao;
 
     @CreatedDate
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @Column(name = "regdate")
     private LocalDateTime regdate;
 
     @Column(name = "user_condition", columnDefinition = "VARCHAR(5) DEFAULT 'Y' ")
     private String user_condition;
 
+    public void setNewNickname(String nickname){
+        this.nickname = nickname;
+    }
 
 //    회원가입
     public static Users createUsers(UserFormDto userFormDto, PasswordEncoder passwordEncoder){
@@ -64,4 +71,5 @@ public class Users {
                 .kakao(userFormDto.getKakao())
                 .build();
     }
+
 }

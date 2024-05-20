@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
 
     <meta charset="utf-8">
@@ -19,6 +19,29 @@
     <!-- SB Admin2 css -->
     <link href="/css/sb-admin-2.min.css" rel="stylesheet">
 
+    <script>
+        function checkNicknameExist() {
+            const nickname = document.getElementById('nick').value;
+            console.log("---------------mypage--------------");
+            console.log(nickname);
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', `/users/${nickname}/exist`, true);
+            xhr.onload = function () {
+                const nicknameError = document.getElementById('nicknameError');
+                if (xhr.status === 200) {
+                    const response = JSON.parse(xhr.responseText);
+                    if (response.exists) {
+                        nicknameError.style.display = 'block';
+                        nicknameSuccess.style.display = 'none';
+                    } else {
+                        nicknameError.style.display = 'none';
+                        nicknameSuccess.style.display = 'block';
+                    }
+                }
+            };
+            xhr.send();
+        }
+    </script>
 </head>
 
 <body>
@@ -28,7 +51,7 @@
         <div id="content">
 
             <!-- 헤더 영역 -->
-            <div th:include="~{fragments/header :: #header}"></div>
+            <div th:insert="~{fragments/header :: #header}"></div>
 
             <!-- Nested Row within Card Body -->
             <div class="content-fluid row p-5">
@@ -42,7 +65,7 @@
 
                         <!-- 뒤로가기 버튼 -->
                         <div class="col-sm-3 text-right">
-                            <a href="boardlist" class="btn btn-danger btn-icon-split">
+                            <a th:href="@{/main}" class="btn btn-danger btn-icon-split">
                                 <span class="text">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;뒤로가기&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
                             </a>
                         </div>
@@ -54,23 +77,28 @@
                             <div class="card md-4 py-3 border-left-primary">
                                 <div class="card-body">
                                     <div class="row">
-                                        <div class="col-4">
-                                            <input type="text" placeholder="차가운 게시판" class="form-control">
-                                        </div>
-                                        <div class="col-8 text-right">
-                                            <button class="btn btn-primary text-right">닉네임 변경</button>
-                                        </div>
+                                        <form method="post" action="/users/changeNickname" class="w-100 d-flex align-items-center">
+                                            <div class="col-8">
+                                                <input type="text" id="nick" th:value="${nickname}" class="form-control">
+                                                <p id="nicknameError" style="display:none; color:red;">이미 사용 중인 닉네임입니다.</p>
+                                                <p id="nicknameSuccess" style="display:none; color:green;">사용 가능한 닉네임입니다.</p>
+                                            </div>
+                                            <div class="col-4 text-right">
+                                                <button type="button" class="btn btn-secondary" onclick="checkNicknameExist()">중복확인</button>
+                                                <button type="submit" class="btn btn-primary">닉네임 변경</button>
+                                            </div>
+                                        </form>
                                     </div>
                                 </div>
                             </div>
                             <div class="card md-4 py-3 border-left-primary">
                                 <div class="card-body">
-                                    이메일 : msmk908@naver.com
+                                    이메일 : <span th:text="${email}"/>
                                 </div>
                             </div>
                             <div class="card md-4 py-3 border-left-primary">
                                 <div class="card-body">
-                                    가입일 : 2024-05-16
+                                    가입일 : <span th:text="${#temporals.format(regdate, 'yyyy-MM-dd HH:mm:ss')}"/>
                                 </div>
                             </div>
                         </div>
@@ -87,7 +115,7 @@
             </div>
 
             <!-- 푸터 영역 -->
-            <div th:include="~{fragments/footer :: #footer}"></div>
+            <div th:insert="~{fragments/footer :: #footer}"></div>
 
         </div>
     </div>

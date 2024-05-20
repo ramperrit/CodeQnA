@@ -1,7 +1,9 @@
 package com.codeqna.service;
 
+import com.codeqna.dto.UserFormDto;
 import com.codeqna.entity.Users;
 import com.codeqna.repository.UserRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -36,11 +38,6 @@ public class UserService implements UserDetailsService {
         }
     }
 
-    public boolean isNicknameExist(String nickname){
-        Users existNickname = userRepository.findByNickname(nickname);
-        return existNickname == null;
-    }
-
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         Users users = userRepository.findByEmail(email);
@@ -55,19 +52,14 @@ public class UserService implements UserDetailsService {
                 .build();
     }
 
-//    @Override
-//    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-//        Users users = userRepository.findByEmail(email);
-//        if (users == null){
-//            throw new UsernameNotFoundException(email);
-//        }
-//
-//        GrantedAuthority authority = new SimpleGrantedAuthority(users.getUser_role().toString());
-//
-//        return new User(
-//                users.getEmail(),
-//                users.getPassword(),
-//                Collections.singletonList(authority)
-//        );
-//    }
+    public boolean nicknameExists(String nickname) {
+        return userRepository.existsByNickname(nickname);
+    }
+
+
+    public void updateNickname(String nickname) throws Exception{
+        if (!nickname.isBlank()){
+            Users updateUser = userRepository.findByNickname(nickname);
+        }
+    }
 }
