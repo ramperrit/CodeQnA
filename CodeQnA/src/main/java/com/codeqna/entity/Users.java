@@ -8,6 +8,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.DynamicInsert;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -18,25 +20,26 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Table(name = "users")
+@DynamicInsert
 public class Users {
 
-
-//    private Long id;
-
     @Id
-    @GeneratedValue
+    @Column
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    @Column(name = "email")
+    @Column(name = "email", unique = true, nullable = false)
     private String email;
 
     @Column(name = "nickname", unique = true, nullable = false)
     private String nickname;
 
-    @Column(name = "password")
+    @Column(name = "password", nullable = false)
     private String password;
 
-    @Column(name = "user_role", nullable = false)
+    @Enumerated(EnumType.STRING)
+    @Column(name = "user_role")
     private UserRole user_role;
 
     @Column(name = "kakao", columnDefinition = "VARCHAR(5) DEFAULT 'N' ")
@@ -46,14 +49,13 @@ public class Users {
     @Column(name = "regdate")
     private LocalDateTime regdate;
 
-    @Column(name = "user_condition", nullable = false, columnDefinition = "VARCHAR(5) DEFAULT 'Y' ")
+    @Column(name = "user_condition", columnDefinition = "VARCHAR(5) DEFAULT 'Y' ")
     private String user_condition;
 
 
 //    회원가입
     public static Users createUsers(UserFormDto userFormDto, PasswordEncoder passwordEncoder){
-        Users users = new Users();
-        users.builder()
+        return Users.builder()
                 .nickname(userFormDto.getNickname())
                 .email(userFormDto.getEmail())
                 .password(passwordEncoder.encode(userFormDto.getPassword()))
@@ -61,6 +63,5 @@ public class Users {
                 .user_condition(userFormDto.getUser_condition())
                 .kakao(userFormDto.getKakao())
                 .build();
-        return users;
     }
 }

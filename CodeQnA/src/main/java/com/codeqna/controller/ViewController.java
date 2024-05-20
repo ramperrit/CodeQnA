@@ -1,8 +1,11 @@
 package com.codeqna.controller;
 
 
+import com.codeqna.dto.UserFormDto;
 import com.codeqna.entity.Board;
+import com.codeqna.entity.Users;
 import com.codeqna.service.BoardService;
+import com.codeqna.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -18,18 +21,9 @@ import java.util.stream.Collectors;
 public class ViewController {
 
     @GetMapping("/main")
-    public String mainpage(){
+    public String mainpage(Model model){
+        model.addAttribute("nickname", "찬욱");
         return "boardlist";
-    }
-
-    @GetMapping("/login")
-    public String login(){
-        return "user/login";
-    }
-
-    @GetMapping("/signup")
-    public String signup(){
-        return "user/signup";
     }
 
     @GetMapping("/admin/deleted")
