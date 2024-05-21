@@ -46,7 +46,7 @@
 
                         <!-- 취소버튼 -->
                         <div class="col-sm-3 text-right">
-                            <a href="main" class="btn btn-danger btn-icon-split">
+                            <a href="Loginmain" class="btn btn-danger btn-icon-split">
                                 <span class="text">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;취소 버튼&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
                             </a>
                         </div>
@@ -81,7 +81,7 @@
                             <!-- 해시태그 추가되는 부분 -->
                         </div>
 
-                        <!-- 첨부파일 -->
+                        <!-- 드롭존 첨부파일 -->
                         <div class="dropzone" id="myDropzone">
                         </div>
 
@@ -134,37 +134,7 @@
         initialValue: '',                            // 내용의 초기 값으로, 반드시 마크다운 문자열 형태여야 함
         previewStyle: 'vertical',                    // 마크다운 프리뷰 스타일 (tab || vertical)
         placeholder: '내용을 입력해 주세요.',
-        /* start of hooks */
-        hooks: {
-            async addImageBlobHook(blob, callback) { // 이미지 업로드 로직 커스텀
-                try {
-                    /*
-                     * 1. 에디터에 업로드한 이미지를 FormData 객체에 저장
-                     *    (이때, 컨트롤러 uploadEditorImage 메서드의 파라미터인 'image'와 formData에 append 하는 key('image')값은 동일해야 함)
-                     */
-                    const formData = new FormData();
-                    formData.append('image', blob);
 
-                    // 2. FileApiController - uploadEditorImage 메서드 호출
-                    const response = await fetch('/tui-editor/image-upload', {
-                        method : 'POST',
-                        body : formData,
-                    });
-
-                    // 3. 컨트롤러에서 전달받은 디스크에 저장된 파일명
-                    const filename = await response.text();
-                    console.log('서버에 저장된 파일명 : ', filename);
-
-                    // 4. addImageBlobHook의 callback 함수를 통해, 디스크에 저장된 이미지를 에디터에 렌더링
-                    const imageUrl = `/tui-editor/image-print?filename=${filename}`;
-                    callback(imageUrl, 'image alt attribute');
-
-                } catch (error) {
-                    console.error('업로드 실패 : ', error);
-                }
-            }
-        }
-        /* end of hooks */
     });
 
     /*editor.setHTML(document.getElementById('article-content').value);*/
@@ -183,13 +153,13 @@
             // 입력한 해시태그가 비어있으면 추가하지 않음
             if(hashtagText !== '' && hashtagPattern.test(hashtagText)) {
                 // 현재 해시태그 목록 개수 확인
-                var hashtagCount = $('.form-group.hashtag-list .col-sm-3').length;
+                var hashtagCount = $('.form-group.hashtag-list .hashtag').length;
                 // 해시태그가 3개 미만인 경우에만 추가
                 if(hashtagCount < 3){
                     // 해시태그 추가 요소 생성
                     var hashtagElement = '<div class="p-2 hashtag_delete">' +
                         '<a class="btn btn-primary btn-icon-split">' +
-                        '<span class="text">#' + hashtagText + '</span>' +
+                        '<span class="text hashtag">#' + hashtagText + '</span>' +
                         '<span class="icon text-white-50">' +
                         '<i class="fas fa-trash"></i>' +
                         '</span>' +
@@ -324,7 +294,7 @@
 
         function success(){
             alert("등록 완료되었습니다.");
-            location.replace("/main");
+            location.replace("/Loginmain");
         }
         function fail(){
             alert("등록 실패했습니다.");

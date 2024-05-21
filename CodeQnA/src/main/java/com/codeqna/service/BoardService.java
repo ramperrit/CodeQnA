@@ -2,10 +2,12 @@ package com.codeqna.service;
 
 import com.codeqna.dto.AddBoardRequest;
 import com.codeqna.dto.BoardViewDto;
+import com.codeqna.dto.ModifyBoardRequest;
 import com.codeqna.entity.Board;
 import com.codeqna.entity.Uploadfile;
 import com.codeqna.repository.BoardRepository;
 import com.codeqna.repository.UploadfileRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,17 +30,17 @@ public class BoardService {
     // 검색조건에 맞는 게시물을 가져오기
     public List<Board> searchBoards(String condition, String keyword) {
         if (condition.equals("title")) {
-            return boardRepository.findByTitleContaining(keyword);
+            return boardRepository.findByTitleContaining(keyword, "N");
         } else if (condition.equals("content")) {
-            return boardRepository.findByContentContaining(keyword);
+            return boardRepository.findByContentContaining(keyword, "N");
         } else if (condition.equals("nickname")) {
-            return boardRepository.findByNicknameContaining(keyword);
+            return boardRepository.findByNicknameContaining(keyword, "N");
         } else if (condition.equals("hashtag")) {
             String[] keywords = Arrays.stream(keyword.split(","))
                     .map(String::trim)
                     .filter(s -> !s.isEmpty())  // 공백만 있는 경우 필터링
                     .toArray(String[]::new);
-            return boardRepository.findByHashtagsContaining(keywords);
+            return boardRepository.findByHashtagsContaining(keywords, "N");
         } else {
             // 검색 조건이 잘못된 경우 처리
             throw new IllegalArgumentException("Invalid search condition: " + condition);
@@ -68,6 +70,30 @@ public class BoardService {
         uploadfileRepository.saveAll(uploadFiles);
 
         return savedBoard;
+    }
+
+    public Board modify(ModifyBoardRequest request){
+        // 기존 게시물을 가져옴
+        Board existingBoard = boardRepository.findById(request.getBno()).orElse(null);
+        if (existingBoard == null) {
+            // 기존 게시물이 존재하지 않는 경우 예외 처리 또는 새로운 게시물로 처리
+            throw new EntityNotFoundException("게시물을 찾을 수 없습니다.");
+        }
+
+        // 기존 게시물의 정보를 수정
+        existingBoard.setTitle(request.getTitle());
+        existingBoard.setNickname(request.getNickname());
+        existingBoard.setContent(request.getContent());
+        existingBoard.setHashtag(request.getHashtag());
+        existingBoard.setHeart(request.getHeart());
+        existingBoard.setHitcount(request.getHitcount());
+        existingBoard.setBoard_condition(request.getBoard_condition());
+        // 기타 필요한 속성들도 수정
+
+        // 수정된 게시물을 저장
+        Board modifiedBoard = boardRepository.save(existingBoard);
+
+        return modifiedBoard;
     }
 
     //게시물 삭제

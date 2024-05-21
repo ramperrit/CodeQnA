@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" >
 
 <head>
 
@@ -115,10 +115,18 @@
                 <br>
 
                 <!-- 테이블 부분 -->
-                <div class="card shadow mb-4">
-                    <div class="card-body">
+                <div class="card shadow mb-4 board">
+                    <div class="card-body board">
                         <div class="table-responsive">
-                            <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+
+                            <!-- 글 쓰기 버튼 -->
+                            <div class="text-right">
+                                <a href="newboard">
+                                    <button class="btn btn-primary" href="">글 쓰기</button>
+                                </a>
+                            </div>
+
+                            <table data-order='[[0, "desc"]]' class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
                                 <thead>
                                 <tr>
                                     <th>글번호</th>
@@ -144,13 +152,6 @@
                                 </tr>
 
                                 </tbody>
-
-                                <!-- 글 쓰기 버튼 -->
-                                <div class="text-right">
-                                    <a href="newboard">
-                                        <button class="btn btn-primary" href="">글 쓰기</button>
-                                    </a>
-                                </div>
                             </table>
                         </div>
                     </div>
@@ -171,6 +172,30 @@
 </div>
 <!-- End of Page Wrapper -->
 
+<!-- Scroll to Top Button-->
+<a class="scroll-to-top rounded" href="#page-top">
+    <i class="fas fa-angle-up"></i>
+</a>
+
+<!-- Logout Modal-->
+<div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Ready to Leave?</h5>
+                <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="modal-body">Select "Logout" below if you are ready to end your current session.</div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancel</button>
+                <a class="btn btn-primary" href="login.html">Logout</a>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- Bootstrap core JavaScript-->
 <script src="/vendor/jquery/jquery.min.js"></script>
@@ -227,6 +252,9 @@
             filterTable(searchCondition, searchKeyword);
         });
     });
+
+
+
     function filterTable(searchCondition, searchKeyword) {
         // AJAX를 사용하여 서버에 검색 요청을 보냅니다.
         $.ajax({
@@ -238,22 +266,67 @@
                 var searchData = data;
 
                 // 기존 테이블을 삭제합니다.
-                $('#dataTable tbody').empty();
+                $('.card-body.board').remove();
 
                 // 새로운 테이블을 만듭니다.
+                var newTable = $('<table data-order=\'\[\[0, "desc"\]\]\' class="table table-bordered">').attr('id', 'dataTable').attr('width', '100%').attr('cellspacing', '0');
+                var thead = $('<thead>').appendTo(newTable);
+                var tbody = $('<tbody>').appendTo(newTable);
+
+                // 테이블 헤더 생성
+                var headerRow = $('<tr>').appendTo(thead);
+                $('<th>').text('글번호').appendTo(headerRow);
+                $('<th>').text('제목').appendTo(headerRow);
+                $('<th>').text('작성자').appendTo(headerRow);
+                $('<th>').text('해시태그').appendTo(headerRow);
+                $('<th>').text('조회수').appendTo(headerRow);
+                $('<th>').text('좋아요 수').appendTo(headerRow);
+                $('<th>').text('작성일').appendTo(headerRow);
+
+                // 데이터 출력
                 searchData.forEach(function (board) {
-                    var newRow = $('<tr>').appendTo('#dataTable tbody');
+                    var newRow = $('<tr>').appendTo(tbody);
                     $('<td>').text(board.bno).appendTo(newRow);
                     $('<td>').text(board.title).appendTo(newRow);
                     $('<td>').text(board.nickname).appendTo(newRow);
                     $('<td>').text(board.hashtag).appendTo(newRow);
                     $('<td>').text(board.hitcount).appendTo(newRow);
                     $('<td>').text(board.heart).appendTo(newRow);
-                    $('<td>').text(board.regdate).appendTo(newRow);
+
+                    // 날짜 포맷팅
+                    var formattedDate = formatDate(new Date(board.regdate));
+                    $('<td>').text(formattedDate).appendTo(newRow);
+
                     newRow.attr('data-url', '/viewboard/' + board.bno);
                     newRow.click(function () {
                         window.location.href = $(this).attr('data-url');
                     });
+                });
+
+                // 테이블 및 버튼 추가
+                var cardBody = $('<div>').addClass('card-body board').appendTo($('.card.shadow.mb-4.board'));
+                var tableResponsive = $('<div>').addClass('table-responsive').appendTo(cardBody);
+
+                // 글 쓰기 버튼 추가
+                var textRightDiv = $('<div>').addClass('text-right').appendTo(tableResponsive);
+                var aTag = $('<a>').attr('href', 'newboard').appendTo(textRightDiv);
+                $('<button>').addClass('btn btn-primary').attr('href', '').text('글 쓰기').appendTo(aTag);
+
+                // 테이블 생성한 것을 tableResponsive 안에 넣어준다
+                tableResponsive.append(newTable);
+
+                // 새로 생성된 테이블에 DataTables 초기화
+                newTable.DataTable({
+                    "dom": "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +
+                        "<'row'<'col-sm-12'tr>>" +
+                        "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+                    "renderer": 'bootstrap',
+                    "language": {
+                        "paginate": {
+                            "previous": "이전",
+                            "next": "다음"
+                        }
+                    }
                 });
             },
             error: function (xhr, status, error) {
@@ -261,6 +334,18 @@
                 console.error(xhr);
             }
         });
+    }
+
+    // 날짜 포맷팅 함수
+    function formatDate(date) {
+        var year = date.getFullYear();
+        var month = ('0' + (date.getMonth() + 1)).slice(-2); // 월은 0부터 시작하므로 +1
+        var day = ('0' + date.getDate()).slice(-2);
+        var hours = ('0' + date.getHours()).slice(-2);
+        var minutes = ('0' + date.getMinutes()).slice(-2);
+        var seconds = ('0' + date.getSeconds()).slice(-2);
+
+        return year + '-' + month + '-' + day + ' ' + hours + ':' + minutes + ':' + seconds;
     }
 </script>
 

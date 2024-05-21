@@ -10,12 +10,16 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 public interface BoardRepository extends JpaRepository<Board, Long>, BoardRepositoryCustom {
+
     Board findByBno(Long bno);
 
     // 칼럼에 키워드값이 포함되어 있는 보드리스트
-    List<Board> findByTitleContaining(String keyword);
-    List<Board> findByContentContaining(String keyword);
-    List<Board> findByNicknameContaining(String keyword);
+    @Query("SELECT b FROM Board b WHERE b.title LIKE %:title% AND b.board_condition = :boardCondition")
+    List<Board> findByTitleContaining(@Param("title") String keyword, @Param("boardCondition") String boardCondition);
+    @Query("SELECT b FROM Board b WHERE b.content LIKE %:content% AND b.board_condition = :boardCondition")
+    List<Board> findByContentContaining(@Param("content") String keyword, @Param("boardCondition") String boardCondition);
+    @Query("SELECT b FROM Board b WHERE b.nickname LIKE %:nickname% AND b.board_condition = :boardCondition")
+    List<Board> findByNicknameContaining(@Param("nickname") String keyword, @Param("boardCondition") String boardCondition);
 
     @Transactional
     @Modifying

@@ -21,15 +21,56 @@
         var count = parseInt(likeCount.innerText);
 
         var bno = document.getElementById('boardBno').value;
+        var nickname = document.getElementById("nickname").value;
 
+        //사용자가 게시물에 좋아요를 눌렀는지
+        //console.log("닉넴:" + nickname);
+        if(nickname) {
+            fetch("/boardAPI/heart/pressHeart", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    nickname: nickname,
+                    bno: bno,
+                })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data) {
+                        isLiked = true;  // 서버에서 true가 넘어오면 isLiked를 true로 설정
+                        heartIcon.classList.remove("far");
+                        heartIcon.classList.add("fas", "text-danger");
+                    }
+                    //console.log("isLiked:", isLiked);  // 확인용 콘솔 출력
+                })
+                .catch(error => {
+                    console.error("Error fetching like status:", error);
+                    //console.log("게시물에 좋아요 안눌렀을 때 나오는거임, 동작엔 문제 없음");
+                });
+        }
 
         heartButton.addEventListener("click", function() {
-            var requestUrl = isLiked ? "/boardAPI/heart/" + bno + "/unlike" : "/boardAPI/heart/" + bno + "/like";
+            //console.log(nickname);
+            //console.log(bno);
+            if(nickname === "") {
+                alert("로그인된 사용자만 가능합니다.");
+                return ;
+            }
+            var requestUrl = isLiked ? "/boardAPI/heart/unlike" : "/boardAPI/heart/like";
             //console.log("Request URL:", requestUrl);
 
             // Ajax 요청 보내기
             fetch(requestUrl, {
                 method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    nickname : nickname,
+                    bno : bno,
+                }),
             })
                 .then(response => {
                     if (response.ok) {
@@ -63,10 +104,10 @@
             if (commentInput === "") {
                 alert("댓글 내용을 입력하세요.");
             } else {
-                var bno = document.getElementById('boardBno').value;
+                /*var bno = document.getElementById('boardBno').value;*/
                 var data = {
                     bno : bno,
-                    nickname : "나다이쉐끼야",
+                    nickname : document.getElementById("nickname").value,
                     content : commentInput,
                     //parent_id : "", //생각해보니 댓글은 부모가 없고 답글만 부모가 있음
                     //regdate : new Date().toISOString() //생성일도 서버에서 해주는 거
@@ -82,12 +123,13 @@
 
                 var commentList = document.querySelector(".comment_list");
                 var newCommentItem = document.createElement("li");
-                var regdate = new Date().toISOString();
+                var regdate = new Date();
+                var formattedDate = formatDate(regdate);
                 newCommentItem.classList.add("row");
                 newCommentItem.innerHTML = `
-                    <div class="col-md-2">작성자</div>
+                    <div class="col-md-2">${nickname}</div>
                     <div class="col-md-6">${commentInput}</div>
-                    <div class="col-md-2">${regdate}</div>
+                    <div class="col-md-2">${formattedDate}</div>
                     <div class="col-md-2">
                       <button class="btn btn-danger btn-sm">삭제</button>
                       <button class="btn btn-secondary btn-sm reply-btn">답글</button>
@@ -160,15 +202,17 @@
 
                     replyButton.addEventListener("click", function () {
                         var replyText = replyInput.value.trim();
+                        var regdate = new Date();
+                        var formattedDate = formatDate(regdate);
                         if (replyText === "") {
                             alert("답글 내용을 입력하세요.");
                         } else {
                             var newReplyItem = document.createElement("li");
                             newReplyItem.className = "row";
                             newReplyItem.innerHTML = `
-                                <div class="col-md-2">작성자</div>
+                                <div class="col-md-2">${nickname}</div>
                                 <div class="col-md-6">${replyText}</div>
-                                <div class="col-md-2">현재시간</div>
+                                <div class="col-md-2">${formattedDate}</div>
                                 <div class="col-md-2">
                                     <button class="btn btn-danger btn-sm">삭제</button>
                                 </div>
@@ -198,6 +242,18 @@
                         });
                 }
             });
+        }
+
+        //2024 05 20 17:03
+        //날짜 포매팅 함수
+        function formatDate(date) {
+            var year = date.getFullYear();
+            var month = ("0" + (date.getMonth() + 1)).slice(-2);
+            var day = ("0" + date.getDate()).slice(-2);
+            var hours = ("0" + date.getHours()).slice(-2);
+            var minutes = ("0" + date.getMinutes()).slice(-2);
+
+            return year + "-" + month + "-" + day + " " + hours + ":" + minutes;
         }
     });
 
@@ -240,6 +296,7 @@
             <br>
             <!-- page heading -->
             <div class="container-fluid">
+                <input type="hidden" id="nickname" th:value="${nickname}">
                 <input type="hidden" id="boardBno" th:value="${board.bno}">
                 <h1 class="h3 mb-1 text-gray-800" th:text="${board.title}"></h1>
                 <div class="row">
@@ -279,14 +336,15 @@
                 <br>
                 <div class="row">
                     <div th:each="hashtag : ${hashtags}">
-                        <!--<span th:text="${hashtag}"></span>-->
                         <a href="#" th:inline="text" style="margin-right: 5px;">#[[${hashtag}]]</a>
                     </div>
 
                     <div class="col text-right">
                         <button class="btn btn-primary"
-                                th:onclick="|location.href='@{/modifyboard?bno={bno}(bno=${board.bno})}'|">수정</button>
-                        <button id="deleteBoard" class="btn btn-danger">삭제</button>
+                                th:onclick="|location.href='@{/modifyboard?bno={bno}(bno=${board.bno})}'|"
+                                th:disabled="${nickname != board.nickname}">수정</button>
+                        <button id="deleteBoard" class="btn btn-danger"
+                                th:disabled="${nickname != board.nickname && nickname != 'admin'}">삭제</button>
                         <button th:onclick="|location.href='@{/main}'|" class="btn btn-secondary">목록</button>
                     </div>
                 </div>
@@ -308,8 +366,12 @@
                 <!-- 댓글 작성 -->
                 <hr style="height: 3px; background-color: #007bff;">
                 <div class="input-group mb-3">
-                    <input id="commentInput" type="text" class="form-control" placeholder="댓글 내용을 입력하세요." aria-label="Recipient's username" aria-describedby="button-addon2">
-                    <button id="commentButton" class="btn btn-secondary" type="button">댓글 등록</button>
+                    <input id="commentInput" type="text" class="form-control"
+                           th:placeholder="${nickname == ''} ? '로그인이 필요합니다' : '댓글 내용을 입력하세요.'"
+                           aria-label="Recipient's username" aria-describedby="button-addon2"
+                           th:disabled="${nickname == ''}">
+                    <button id="commentButton" class="btn btn-secondary" type="button"
+                            th:disabled="${nickname == ''}">댓글 등록</button>
                 </div>
 
                 <!-- 댓글 목록 -->
@@ -335,8 +397,8 @@
                         <li class="row justify-content" th:each="reply : ${reply}">
                             <input type="hidden" id="parent_reply_id" th:value="${reply.rno}">
                             <div class="col-md-2" th:text="${reply.nickname}"></div>
-                            <div class="col-md-6" th:text="${reply.content}">html 너무 어렵당</div>
-                            <div class="col-md-2" th:text="${reply.regdate}">2024:17:14</div>
+                            <div class="col-md-6" th:text="${reply.content}"></div>
+                            <div class="col-md-2" th:text="${#temporals.format(reply.regdate, 'yyyy-MM-dd HH:mm')}"></div>
                             <div class="col-md-2">
                                 <button class="btn btn-danger btn-sm">삭제</button>
                                 <button class="btn btn-secondary btn-sm reply-btn">답글</button>

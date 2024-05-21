@@ -25,6 +25,11 @@
 </head>
 
 <body>
+<input id="bno" type="hidden" th:value="${board.bno}">
+<input id="nickname" type="hidden" th:value="${board.nickname}">
+<input id="heart" type="hidden" th:value="${board.heart}">
+<input id="hitcount" type="hidden" th:value="${board.hitcount}">
+
 
 <div id="wrapper">
     <div id="content-wrapper" class="d-flex flex-column">
@@ -55,11 +60,12 @@
                     <form class="user" enctype="multipart/form-data">
                         <div class="form-group">
                             <input type="text" class="form-control form-control-user" id="title"
-                                   placeholder="제목을 입력하세요">
+                                   placeholder="제목을 입력하세요" th:value="${board.title}">
                         </div>
 
                         <!-- 토스트 ui -->
                         <div id="tui"></div>
+                        <input id="bno-content" type="hidden" th:value="${board.content}">
                         <hr>
 
                         <!-- 해시태그 추가버튼 -->
@@ -79,9 +85,10 @@
                         <div class="form-group row hashtag-list">
                             <!-- 해시태그 추가되는 부분 -->
                         </div>
+                        <input id="bno-hashtag" type="hidden" th:value="${board.hashtag}">
 
-                        <!-- 첨부파일 -->
-                        <div class="dropzone">
+                        <!-- 드롭존 첨부파일 -->
+                        <div class="dropzone" id="myDropzone">
                         </div>
 
                         <br/><br/>
@@ -89,7 +96,7 @@
                         <div class="form-group row">
                             <div class="col-2"></div>
                             <div class="col-8">
-                                <a href="#" class="btn btn-primary btn-user btn-block">
+                                <a class="btn btn-primary btn-user btn-block" id="modify-button">
                                     게시물 수정하기
                                 </a>
                             </div>
@@ -126,52 +133,49 @@
 
 <!-- TUI 스크립트 -->
 <script>
+    var content = document.getElementById('bno-content').value;
+
     const editor = new toastui.Editor({
         el: document.querySelector('#tui'),          // 에디터를 적용할 요소 (컨테이너)
         height: '500px',                             // 에디터 영역의 높이 값 (OOOpx || auto)
-        initialEditType: 'wysiwyg',                 // 최초로 보여줄 에디터 타입 (markdown || wysiwyg)
-        initialValue: '',                            // 내용의 초기 값으로, 반드시 마크다운 문자열 형태여야 함
+        initialEditType: 'wysiwyg',                  // 최초로 보여줄 에디터 타입 (markdown || wysiwyg)
+        initialValue: content,                       // 내용의 초기 값으로, 반드시 마크다운 문자열 형태여야 함
         previewStyle: 'vertical',                    // 마크다운 프리뷰 스타일 (tab || vertical)
         placeholder: '내용을 입력해 주세요.',
-        /* start of hooks */
-        hooks: {
-            async addImageBlobHook(blob, callback) { // 이미지 업로드 로직 커스텀
-                try {
-                    /*
-                     * 1. 에디터에 업로드한 이미지를 FormData 객체에 저장
-                     *    (이때, 컨트롤러 uploadEditorImage 메서드의 파라미터인 'image'와 formData에 append 하는 key('image')값은 동일해야 함)
-                     */
-                    const formData = new FormData();
-                    formData.append('image', blob);
 
-                    // 2. FileApiController - uploadEditorImage 메서드 호출
-                    const response = await fetch('/tui-editor/image-upload', {
-                        method : 'POST',
-                        body : formData,
-                    });
-
-                    // 3. 컨트롤러에서 전달받은 디스크에 저장된 파일명
-                    const filename = await response.text();
-                    console.log('서버에 저장된 파일명 : ', filename);
-
-                    // 4. addImageBlobHook의 callback 함수를 통해, 디스크에 저장된 이미지를 에디터에 렌더링
-                    const imageUrl = `/tui-editor/image-print?filename=${filename}`;
-                    callback(imageUrl, 'image alt attribute');
-
-                } catch (error) {
-                    console.error('업로드 실패 : ', error);
-                }
-            }
-        }
-        /* end of hooks */
     });
 
-    editor.setHTML(document.getElementById('article-content').value);
+    /*editor.setHTML(document.getElementById('article-content').value);*/
 </script>
 
 <!-- 해시태그 추가 스크립트 -->
 <script>
+    // 데이터베이스에서 가져온 해시태그 값
+    const databaseHashtags = document.getElementById('bno-hashtag').value;
+
+    // 해시태그 값을 쉼표(,)와 #으로 분할하여 배열로 변환
+    const hashtagsArray = databaseHashtags.split('#').filter(Boolean);
+
+    // HTML 요소로 변환된 해시태그 목록을 저장할 변수
+    let hashtagElements = '';
+
+    // 배열에 있는 각 해시태그를 HTML 요소로 변환하여 저장
+    hashtagsArray.forEach(hashtag => {
+        hashtagElements += `<div class="p-2 hashtag_delete">
+                            <a class="btn btn-primary btn-icon-split">
+                                <span class="text hashtag">#${hashtag}</span>
+                                <span class="icon text-white-50">
+                                    <i class="fas fa-trash"></i>
+                                </span>
+                            </a>
+                        </div>`;
+    });
+
+    // 변환된 HTML 요소를 해시태그 목록에 추가
+    $('.form-group.hashtag-list').html(hashtagElements);
+
     $(document).ready(function(){
+
         // 추가 버튼 클릭 시
         $('#newhashtag').click(function(){
             // 입력한 해시태그 텍스트 가져오기
@@ -181,13 +185,13 @@
             // 입력한 해시태그가 비어있으면 추가하지 않음
             if(hashtagText !== '' && hashtagPattern.test(hashtagText)) {
                 // 현재 해시태그 목록 개수 확인
-                var hashtagCount = $('.form-group.hashtag-list .col-sm-3').length;
+                var hashtagCount = $('.form-group.hashtag-list .hashtag').length;
                 // 해시태그가 3개 미만인 경우에만 추가
                 if(hashtagCount < 3){
                     // 해시태그 추가 요소 생성
-                    var hashtagElement = '<div class="col-sm-3">' +
-                        '<a href="#" class="btn btn-primary btn-icon-split">' +
-                        '<span class="text">#' + hashtagText + '</span>' +
+                    var hashtagElement = '<div class="p-2 hashtag_delete">' +
+                        '<a class="btn btn-primary btn-icon-split">' +
+                        '<span class="text hashtag">#' + hashtagText + '</span>' +
                         '<span class="icon text-white-50">' +
                         '<i class="fas fa-trash"></i>' +
                         '</span>' +
@@ -210,7 +214,7 @@
         // 삭제 버튼 클릭 시
         $(document).on('click', '.btn-icon-split', function(){
             // 해당 해시태그 요소 제거
-            $(this).closest('.col-sm-3').remove();
+            $(this).closest('.hashtag_delete').remove();
         });
     });
 </script>
@@ -219,11 +223,115 @@
 <script>
     Dropzone.autoDiscover = false; // deprecated 된 옵션. false로 해놓는걸 공식문서에서 명시
 
-    const dropzone = new Dropzone("div.dropzone", {
-        url: "https://httpbin.org/post",
-        addRemoveLinks: true, // 업로드 후 파일 삭제버튼 표시 여부
-        dictRemoveFile: '삭제', // 삭제버튼 표시 텍스트
+    let uploadedFiles = []; // 업로드된 파일 정보를 저장할 배열
+
+    async function setDropzone() {
+        try {
+            const response = await fetch('/fileAPI/fileconfig');
+            const config = await response.json();
+
+            const maxFiles = config.max_File_Num;
+            const maxFilesize = config.max_file_Size;
+            const acceptedFiles = config.file_ext.split(',').map(ext => '.' + ext).join(',');
+            console.log(maxFiles);
+            console.log(maxFilesize);
+            console.log(acceptedFiles);
+
+            const myDropzone = new Dropzone("#myDropzone", {
+                url: "/fileAPI/upload",
+                addRemoveLinks: true, // 업로드 후 파일 삭제버튼 표시 여부
+                dictRemoveFile: '삭제', // 삭제버튼 표시 텍스트
+                maxFiles: maxFiles, // 업로드 파일수
+                maxFilesize: maxFilesize, // 최대업로드용량
+                acceptedFiles: acceptedFiles, // 이미지 파일 포맷만 허용
+                success: function(file, response) {
+                    console.log(response);
+                    uploadedFiles.push(response);
+                    console.log(uploadedFiles);
+                },
+                error: function(file, errorMessage) {
+                    console.error(errorMessage);
+                }
+            });
+
+            // 최대 파일 수 초과 메서드
+            myDropzone.on("maxfilesexceeded", function(file) {
+                this.removeFile(file); // 초과한 파일 제거
+                alert("업로드 가능한 최대 파일 수: "+maxFiles+"개"); // 사용자에게 알림
+            });
+
+            // 최대용량 초과, 허용되지 않는 허용자 메서드
+            myDropzone.on("addedfile", function(file) {
+                if (!acceptedFiles.includes(file.name.substring(file.name.lastIndexOf('.')))) {
+                    this.removeFile(file); // 허용되지 않은 확장자를 가진 파일 제거
+                    alert("허용되지 않은 파일 형식입니다."); // 사용자에게 알림
+                } else if (file.size > maxFilesize * 1024 * 1024) {
+                    this.removeFile(file); // 설정된 용량을 초과하는 파일 제거
+                    alert("업로드 가능한 파일 최대용량: "+maxFilesize+"MB"); // 사용자에게 알림
+                }
+            });
+
+        } catch (error) {
+            console.error('Failed to fetch file config:', error);
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        setDropzone();
     });
+</script>
+
+<script>
+    const modifyButton = document.getElementById("modify-button");
+
+    if(modifyButton){
+        // 클릭 이벤트가 감지되면 생성 API 요청
+        modifyButton.addEventListener("click", (event) => {
+            // 해시태그들을 담을 문자열 변수
+            let hashtags = "";
+            // 해시태그 목록 요소들을 선택
+            const hashtagElements = document.querySelectorAll('.hashtag-list .btn-primary');
+            // 각 해시태그 목록 요소들을 순회하며 해시태그들을 문자열에 추가
+            hashtagElements.forEach((element, index) => {
+                const hashtagText = element.querySelector('.text').innerText; // 해시태그 텍스트 가져오기
+
+                hashtags += hashtagText; // 해시태그 추가
+            });
+
+            fetch("/boardAPI/modify", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    bno: document.getElementById("bno").value,
+                    title: document.getElementById("title").value, // 제목 데이터 model에 추가
+                    nickname: document.getElementById("nickname").value,
+                    content: editor.getHTML(), // 본문 내용 추가
+                    hashtag: hashtags,
+                    heart: document.getElementById('heart').value,
+                    hitcount: document.getElementById('hitcount').value,
+                    board_condition: "N",
+                    files: uploadedFiles,
+                })
+            }).then(response => {
+                if (response.ok) {
+                    success();
+                } else {
+                    fail();
+                }
+            });
+        });
+
+        function success(){
+            alert("수정 완료되었습니다.");
+            const bno = document.getElementById("bno").value; // 수정된 게시물의 번호 가져오기
+            location.replace("/viewboard/" + bno); // 해당 게시물의 상세보기 페이지로 이동
+        }
+        function fail(){
+            alert("수정 실패했습니다.");
+        }
+    }
 </script>
 
 </body>

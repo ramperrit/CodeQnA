@@ -90,14 +90,17 @@ public class ViewController {
 
     @GetMapping("/modifyboard")
     public String modifyboard(@RequestParam(required = false) Long bno, Model model){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
+        Users users = userRepository.findByEmail(email);
+        model.addAttribute("nickname", users.getNickname());
+
         //지금은 board 데이터 전부 다 넘겨주고 있는데
         //나중에 제목, 내용, 해시태그, 첨부파일 이것만 보내주면 댐
         Board board = boardService.findByBno(bno);
         model.addAttribute("board", board);
         return "modifyboard";
     }
-
-    private final BoardService service;
 
     @GetMapping("/viewboard/{bno}")
     public String viewBoard(@PathVariable Long bno, Model model) {
@@ -125,6 +128,16 @@ public class ViewController {
         // 빈 문자열을 제외합니다.
         hashtagList = hashtagList.stream().filter(s -> !s.isEmpty()).collect(Collectors.toList());
         model.addAttribute("hashtags", hashtagList);
+
+        //로그인된 사용자의 nickname을 넘김, 없으면 오류, 빈 값을 넘김
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
+        Users users = userRepository.findByEmail(email);
+        if(users != null) {
+            model.addAttribute("nickname", users.getNickname());
+        } else {
+            model.addAttribute("nickname", "");
+        }
 
         model.addAttribute("board", board);
 

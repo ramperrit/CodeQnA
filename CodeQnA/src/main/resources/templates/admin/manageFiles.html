@@ -38,6 +38,8 @@
     <link href="/handle-counter/app/css/handle-counter.css" rel="stylesheet">
     <script src="http://code.jquery.com/jquery-1.12.4.min.js"></script>
     <script src="/handle-counter/app/js/handleCounter.js"></script>
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
 
 </head>
 
@@ -200,11 +202,15 @@
     document.querySelector('form').addEventListener('submit', function(event) {
         event.preventDefault(); // 기본 폼 제출 방지
         const formData = getFormData();
+        var token = document.querySelector('meta[name="_csrf"]').content;
+        var header = document.querySelector('meta[name="_csrf_header"]').content;
 
-        fetch('/saveFileConfig', {
+        fetch('/fileAPI/saveFileConfig', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': token,
+                'header': header
             },
             body: JSON.stringify(formData)
         }).then(response => {

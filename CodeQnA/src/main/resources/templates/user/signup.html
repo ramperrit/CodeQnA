@@ -67,12 +67,14 @@
                                 회원가입
                             </button>
                             <br/>
-                        <hr>
+                            <hr>
                             <a href="/users/login" class="btn btn-user btn-danger btn-block">
                                 취소
                             </a>
+
                             <!--CSRF-->
 <!--                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">-->
+
                             <input type="hidden" th:id="errorMessage" th:value="${errorMessage}">
 
                             <!-- 유효성 검사 에러 메세지 표시 구역-->

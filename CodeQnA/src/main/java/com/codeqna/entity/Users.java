@@ -12,7 +12,6 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.security.Principal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -36,7 +35,7 @@ public class Users {
     @Column(name = "nickname", unique = true, nullable = false)
     private String nickname;
 
-    @Column(name = "password", nullable = false)
+    @Column(name = "password")
     private String password;
 
     @Enumerated(EnumType.STRING)
@@ -53,6 +52,10 @@ public class Users {
 
     @Column(name = "user_condition", columnDefinition = "VARCHAR(5) DEFAULT 'N' ")
     private String user_condition;
+
+    public void setNewNickname(String nickname){
+        this.nickname = nickname;
+    }
 
 //    회원가입
     public static Users createUsers(UserFormDto userFormDto, PasswordEncoder passwordEncoder){
