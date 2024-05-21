@@ -4,10 +4,7 @@ package com.codeqna.entity;
 import com.codeqna.constant.UserRole;
 import com.codeqna.dto.UserFormDto;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.DynamicInsert;
 import org.springframework.data.annotation.CreatedDate;
@@ -15,10 +12,11 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.security.Principal;
 import java.time.LocalDateTime;
 
 @Entity
-@Getter
+@Getter @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -53,12 +51,8 @@ public class Users {
     @Column(name = "regdate")
     private LocalDateTime regdate;
 
-    @Column(name = "user_condition", columnDefinition = "VARCHAR(5) DEFAULT 'Y' ")
+    @Column(name = "user_condition", columnDefinition = "VARCHAR(5) DEFAULT 'N' ")
     private String user_condition;
-
-    public void setNewNickname(String nickname){
-        this.nickname = nickname;
-    }
 
 //    회원가입
     public static Users createUsers(UserFormDto userFormDto, PasswordEncoder passwordEncoder){

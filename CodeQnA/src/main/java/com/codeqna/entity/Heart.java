@@ -14,7 +14,7 @@ public class Heart {
     private Long hno;
 
     @Column(name = "nickname", nullable = false)
-    private Long nickname;
+    private String nickname;
 
     @ManyToOne
     @JoinColumn(name = "bno", nullable = false)
