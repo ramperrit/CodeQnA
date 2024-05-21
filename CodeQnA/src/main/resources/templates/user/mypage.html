@@ -3,11 +3,7 @@
 <head>
 
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="">
-    <meta name="author" content="">
-
     <title>mypage</title>
 
     <!-- SB Admin2 text/css -->
@@ -17,30 +13,31 @@
             rel="stylesheet">
 
     <!-- SB Admin2 css -->
-    <link href="/css/sb-admin-2.min.css" rel="stylesheet">
+    <link href="/css/sb-admin-2.css" rel="stylesheet">
     <script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
 
-    <!--    <script>-->
-    <!--        function checkNicknameExist() {-->
-    <!--            const nickname = document.getElementById('nick').value;-->
-    <!--            const xhr = new XMLHttpRequest();-->
-    <!--            xhr.open('GET', `/users/${nickname}/exist`, true);-->
-    <!--            xhr.onload = function () {-->
-    <!--                const nicknameError = document.getElementById('nicknameError');-->
-    <!--                if (xhr.status === 200) {-->
-    <!--                    const response = JSON.parse(xhr.responseText);-->
-    <!--                    if (response.exists) {-->
-    <!--                        nicknameError.style.display = 'block';-->
-    <!--                        nicknameSuccess.style.display = 'none';-->
-    <!--                    } else {-->
-    <!--                        nicknameError.style.display = 'none';-->
-    <!--                        nicknameSuccess.style.display = 'block';-->
-    <!--                    }-->
-    <!--                }-->
-    <!--            };-->
-    <!--            xhr.send();-->
-    <!--        }-->
-    <!--    </script>-->
+    <style>
+        /*본문 사이즈*/
+        #wrapper{
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        #content-wrapper{
+            flex: 1;
+        }
+        #content{
+            flex: 1;
+        }
+        footer {
+            background-color: #8D94C7;
+            color: black;
+            height: 80px; /* 푸터 높이 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
 </head>
 
 <body>
@@ -112,12 +109,10 @@
 
                 </div>
             </div>
-
-            <!-- 푸터 영역 -->
-<!--            <div th:insert="~{fragments/footer :: #footer}"></div>-->
-
         </div>
     </div>
+            <!-- 푸터 영역 -->
+            <div th:include="~{fragments/footer :: #footer}"></div>
 </div>
 
 <!-- Bootstrap core JavaScript-->

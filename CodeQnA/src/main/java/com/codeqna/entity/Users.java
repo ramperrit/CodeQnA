@@ -63,7 +63,7 @@ public class Users {
                 .nickname(userFormDto.getNickname())
                 .email(userFormDto.getEmail())
                 .password(passwordEncoder.encode(userFormDto.getPassword()))
-                .user_role(UserRole.USER)
+                .user_role(UserRole.ADMIN)
                 .user_condition(userFormDto.getUser_condition())
                 .kakao(userFormDto.getKakao())
                 .build();
