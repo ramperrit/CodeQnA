@@ -2,6 +2,7 @@ package com.codeqna.entity;
 
 
 import com.codeqna.constant.UserRole;
+import com.codeqna.dto.UserDto;
 import com.codeqna.dto.UserFormDto;
 import jakarta.persistence.*;
 import lombok.*;
@@ -10,9 +11,13 @@ import org.hibernate.annotations.DynamicInsert;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collection;
 
 @Entity
 @Getter @Setter
@@ -22,7 +27,7 @@ import java.time.LocalDateTime;
 @Table(name = "users")
 @DynamicInsert
 @EntityListeners(AuditingEntityListener.class)
-public class Users {
+public class Users{
 
     @Id
     @Column
@@ -50,12 +55,14 @@ public class Users {
     @Column(name = "regdate")
     private LocalDateTime regdate;
 
+
+
     @Column(name = "user_condition", columnDefinition = "VARCHAR(5) DEFAULT 'N' ")
     private String user_condition;
 
-    public void setNewNickname(String nickname){
-        this.nickname = nickname;
-    }
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @Column(name = "expiredDate")
+    private LocalDateTime expiredDate;
 
 //    회원가입
     public static Users createUsers(UserFormDto userFormDto, PasswordEncoder passwordEncoder){
@@ -63,10 +70,24 @@ public class Users {
                 .nickname(userFormDto.getNickname())
                 .email(userFormDto.getEmail())
                 .password(passwordEncoder.encode(userFormDto.getPassword()))
-                .user_role(UserRole.ADMIN)
+                .user_role(UserRole.USER)
                 .user_condition(userFormDto.getUser_condition())
                 .kakao(userFormDto.getKakao())
                 .build();
     }
+
+    public UserDto toDto() {
+        return UserDto.of(
+                email,
+                nickname,
+                password,
+                user_role,
+                kakao,
+                regdate,
+                user_condition
+        );
+    }
+
+
 
 }

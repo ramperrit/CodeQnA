@@ -8,6 +8,8 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 @Entity
 @Getter @Setter
@@ -17,14 +19,18 @@ public class Reply {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "rno", nullable = false)
-    private Long rno;
+    private Long id;
 
     @ManyToOne
     @JoinColumn(name = "bno", nullable = false)
     private Board board;
 
-    @Column(name = "nickname", nullable = false)
+    @Column(name = "nickname")
     private String nickname;
+
+    @ManyToOne
+    @JoinColumn(name = "email",referencedColumnName = "email")
+    private Users user;
 
     @Column(name = "content", nullable = false)
     private String content;
@@ -33,10 +39,36 @@ public class Reply {
     @Column(name = "regdate")
     private LocalDateTime regdate;
 
-    @Column(name = "parent_id")
-    private Long parent_id;
+    @Column(updatable = false)
+    private Long parentCommentId;
 
-    @Column(name = "reply_condition", nullable = false)
+    @Column(name = "reply_condition", columnDefinition = "VARCHAR(5) DEFAULT 'N' ")
     private String reply_condition;
+
+
+    @OrderBy("regdate ASC")
+    @OneToMany(mappedBy = "parentCommentId",cascade = CascadeType.ALL)
+    private Set<Reply> childComments = new LinkedHashSet<>();
+    
+    private Reply(Board board, Users user, Long parentCommentId, String content) {
+        this.board = board;
+        this.user = user;
+        this.parentCommentId = parentCommentId;
+        this.content = content;
+
+    }
+
+    public static Reply of(Board board, Users user, String content) {
+        return new Reply(board, user, null, content);
+    }
+
+    public void addChildComment(Reply child) {
+        child.setParentCommentId(this.getId());
+        this.getChildComments().add(child);
+    }
+
+
+
+
 
 }

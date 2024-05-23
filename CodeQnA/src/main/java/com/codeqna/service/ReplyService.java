@@ -35,4 +35,10 @@ public class ReplyService {
         reply.setReply_condition("N");
         repository.save(reply);
     }
+
+    public void updateComment(ParentReplyDto parentReplyDto) {
+        Reply reply = repository.findById(parentReplyDto.getRno()).orElseThrow();
+
+
+    }
 }

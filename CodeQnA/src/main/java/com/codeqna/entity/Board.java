@@ -43,10 +43,14 @@ public class Board {
     @Column(name = "regdate")
     private LocalDateTime regdate;
 
-    @Column(name = "nickname", nullable = false)
+    @Column(name = "nickname")
     private String nickname;
 
-    @Column(name = "board_condition", nullable = false)
+    @ManyToOne
+    @JoinColumn(name = "email",referencedColumnName = "email")
+    private Users user;
+
+    @Column(name = "board_condition", nullable = false, columnDefinition = "VARCHAR(5) DEFAULT 'N' ")
     private String board_condition;
 
     @Builder

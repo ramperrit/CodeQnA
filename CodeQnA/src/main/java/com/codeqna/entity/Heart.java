@@ -14,10 +14,16 @@ public class Heart {
     @Column(name = "hno", nullable = false)
     private Long hno;
 
-    @Column(name = "nickname", nullable = false)
+    @Column(name = "nickname")
     private String nickname;
+
+    @ManyToOne
+    @JoinColumn(name = "email",referencedColumnName = "email")
+    private Users user;
 
     @ManyToOne
     @JoinColumn(name = "bno", nullable = false)
     private Board board;
+
+
 }
