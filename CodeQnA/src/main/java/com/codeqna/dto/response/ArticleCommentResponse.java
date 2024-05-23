@@ -23,29 +23,32 @@ public class ArticleCommentResponse {
     private String email;
     private String nickname;
     private Long parentCommentId;
-    private Set<ArticleCommentResponse> childComments;
 
-    public static ArticleCommentResponse of(Long id, String content, LocalDateTime createdAt, String email, String nickname) {
-        return ArticleCommentResponse.of(id, content, createdAt, email, nickname,null);
+    private Set<ArticleCommentResponse> childComments;
+    private String reply_condition;
+
+    public static ArticleCommentResponse of(Long id, String content, LocalDateTime createdAt, String email, String nickname,String reply_condition) {
+        return ArticleCommentResponse.of(id, content, createdAt, email, nickname,null,reply_condition);
     }
 
-    public static ArticleCommentResponse of(Long id, String content, LocalDateTime createdAt, String email, String nickname,  Long parentCommentId) {
+    public static ArticleCommentResponse of(Long id, String content, LocalDateTime createdAt, String email, String nickname,  Long parentCommentId,String reply_condition) {
         Comparator<ArticleCommentResponse> childCommentComparator = Comparator
                 .comparing(ArticleCommentResponse::getCreatedAt)
                 .thenComparingLong(ArticleCommentResponse::getId);
-        return new ArticleCommentResponse(id, content, createdAt, email, nickname,  parentCommentId, new TreeSet<>(childCommentComparator));
+        return new ArticleCommentResponse(id, content, createdAt, email, nickname,  parentCommentId, new TreeSet<>(childCommentComparator),reply_condition);
     }
 
     public static ArticleCommentResponse from(ArticleCommentDto dto) {
 
 
         return ArticleCommentResponse.of(
-              dto.getId(),
+                dto.getId(),
                 dto.getContent(),
                 dto.getRegdate(),
                 dto.getUserDto().getEmail(),
                 dto.getUserDto().getNickname(),
-                dto.getParentCommentId()
+                dto.getParentCommentId(),
+                dto.getReply_condition()
         );
     }
 

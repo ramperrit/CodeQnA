@@ -61,8 +61,8 @@ public class SecurityConfig {
                 .invalidateHttpSession(true)
                 .deleteCookies("JSESSIONID")
         );
-
         http.oauth2Login(oAuth -> oAuth
+
 
                 .userInfoEndpoint(endpoint -> endpoint
                         .userService(oAuth2UserService)
@@ -88,6 +88,8 @@ public class SecurityConfig {
 
                 .anyRequest().authenticated();
         });
+
+//        http.exceptionHandling((e) -> e.authenticationEntryPoint(new CustomAuthenticationEntryPoint()));
 
         return http.build();
     }

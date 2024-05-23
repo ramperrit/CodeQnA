@@ -7,9 +7,11 @@ import com.codeqna.dto.ModifyBoardRequest;
 import com.codeqna.entity.Board;
 import com.codeqna.entity.Logs;
 import com.codeqna.entity.Uploadfile;
+import com.codeqna.entity.Users;
 import com.codeqna.repository.BoardRepository;
 import com.codeqna.repository.LogsRepository;
 import com.codeqna.repository.UploadfileRepository;
+import com.codeqna.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -30,6 +32,8 @@ public class BoardService {
     private final BoardRepository boardRepository;
     private final UploadfileRepository uploadfileRepository;
     private final LogsRepository logsRepository;
+    private final UserService userService;
+    private final UserRepository userRepository;
 
     // 게시물 전체 리스트를 가져오기
     public List<Board> getAllBoards() {
@@ -61,9 +65,11 @@ public class BoardService {
         return boardRepository.findByBno(bno);
     }
 
-    public Board save(AddBoardRequest request){
+    public Board save(AddBoardRequest request,String email){
         // Board 저장
         Board savedBoard = boardRepository.save(request.toEntity());
+        Users user = userRepository.findByEmail(email).orElseThrow();
+        savedBoard.setUser(user);
 
         // Uploadfile 엔티티 생성 및 저장
         List<Uploadfile> uploadFiles = request.getFiles().stream()

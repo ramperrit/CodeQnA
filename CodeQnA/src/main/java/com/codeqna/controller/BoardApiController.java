@@ -1,6 +1,7 @@
 package com.codeqna.controller;
 
 import com.codeqna.dto.*;
+import com.codeqna.dto.security.BoardPrincipal;
 import com.codeqna.entity.Board;
 import com.codeqna.entity.Heart;
 import com.codeqna.entity.Users;
@@ -9,9 +10,9 @@ import com.codeqna.service.HeartService;
 import com.codeqna.service.ReplyService;
 import com.codeqna.service.UserService;
 import lombok.RequiredArgsConstructor;
-import org.apache.catalina.User;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -28,8 +29,11 @@ public class BoardApiController {
 
     // 게시물 등록
     @PostMapping("/register")
-    public ResponseEntity<Board> addBoard(@RequestBody AddBoardRequest request){
-        Board savedBoard = boardService.save(request);
+    public ResponseEntity<Board> addBoard(@RequestBody AddBoardRequest request,
+                                          @AuthenticationPrincipal BoardPrincipal boardPrincipal    ){
+
+        String email = boardPrincipal.getUsername();
+        Board savedBoard = boardService.save(request,email);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(savedBoard);
     }
@@ -90,14 +94,13 @@ public class BoardApiController {
         replyService.addComment(parentReplyDto);
         return ResponseEntity.ok().build();
     }
-
     //회원관리페이지
     //검색
     @GetMapping("/searchUsers")
     public List<Users> searchUsers(@RequestParam("condition") String condition,
-                                         @RequestParam("keyword") String keyword,
-                                         @RequestParam("start") String start,
-                                         @RequestParam("end") String end) {
+                                   @RequestParam("keyword") String keyword,
+                                   @RequestParam("start") String start,
+                                   @RequestParam("end") String end) {
 
         if(condition.equals("regdate")||condition.equals("expiredDate")){
             return userService.searchDateDeleteUsers(condition, start, end);
@@ -106,7 +109,6 @@ public class BoardApiController {
         }
 
     }
-
     // 삭제게시물 전체 불러오는 메서드
     @GetMapping("/deleted")
     public List<LogsViewDto> deletedBoard(){

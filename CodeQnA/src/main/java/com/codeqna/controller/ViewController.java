@@ -6,6 +6,7 @@ import com.codeqna.dto.LogsViewDto;
 import com.codeqna.dto.UserFormDto;
 import com.codeqna.dto.request.ArticleCommentRequest;
 import com.codeqna.dto.response.ArticleCommentResponse;
+import com.codeqna.dto.response.ArticleResponse;
 import com.codeqna.dto.security.BoardPrincipal;
 import com.codeqna.entity.Board;
 import com.codeqna.entity.Reply;
@@ -55,6 +56,7 @@ public class ViewController {
     public String Loginmainpage(Model model, @AuthenticationPrincipal BoardPrincipal boardPrincipal ){
         List<Board> boards = boardService.getAllBoards();
         model.addAttribute("boards", boards);
+
 
         String email = boardPrincipal.getUsername();
         Users users = userRepository.findByEmail(email).orElseThrow();
@@ -122,12 +124,14 @@ public class ViewController {
             , @AuthenticationPrincipal BoardPrincipal boardPrincipal) {
 
         Board board = boardService.findByBno(bno);
-        Set<ArticleCommentResponse> reply = articleCommentService.searchArticleComments(bno);
-
         //없는 게시물에 들어갔을 때
         if(board == null){
             return "error2";
         }
+
+        ArticleResponse articleResponse = ArticleResponse.from(board);
+        Set<ArticleCommentResponse> reply = articleCommentService.searchArticleComments(bno);
+
 
         //삭제된 게시물에 접근할 때
         if(board.getBoard_condition().equals("Y")) {
@@ -143,17 +147,17 @@ public class ViewController {
         hashtagList = hashtagList.stream().filter(s -> !s.isEmpty()).collect(Collectors.toList());
         model.addAttribute("hashtags", hashtagList);
 
-        if(boardPrincipal != null) {
-            //로그인된 사용자의 nickname을 넘김, 없으면 오류, 빈 값을 넘김
+        //로그인된 사용자의 nickname을 넘김, 없으면 오류, 빈 값을 넘김
+
+        if(boardPrincipal!=null) {
             String email = boardPrincipal.getUsername();
             Users users = userRepository.findByEmail(email).orElseThrow();
             model.addAttribute("nickname", users.getNickname());
-            model.addAttribute("role", users.getUser_role());
-        } else {
+        } else{
             model.addAttribute("nickname", "");
         }
 
-        model.addAttribute("board", board);
+        model.addAttribute("board", articleResponse);
 
         model.addAttribute("reply", reply);
         return "viewBoard";

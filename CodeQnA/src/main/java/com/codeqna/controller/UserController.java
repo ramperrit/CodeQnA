@@ -1,6 +1,5 @@
 package com.codeqna.controller;
 
-import com.codeqna.dto.LogsViewDto;
 import com.codeqna.dto.UserFormDto;
 import com.codeqna.dto.security.BoardPrincipal;
 import com.codeqna.entity.Users;
@@ -75,6 +74,8 @@ public class UserController {
 
     @GetMapping("/mypage")
     public String mypage(Model model, @AuthenticationPrincipal BoardPrincipal boardPrincipal){
+
+
         String email = boardPrincipal.getUsername();
         Users users = userRepository.findByEmail(email).orElseThrow();
 
@@ -118,13 +119,17 @@ public class UserController {
 
     @GetMapping("/currentNickname")
     public ResponseEntity<String> getCurrentNickname(@AuthenticationPrincipal BoardPrincipal boardPrincipal) {
+//        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+//        String email = auth.getName();
+
         String email = boardPrincipal.getUsername();
         Users users = userRepository.findByEmail(email).orElseThrow();
        String nickname = users.getNickname();
+     //   String nickname = userService.getNicknameByEmail(email);
         return ResponseEntity.ok(nickname);
     }
 
-    //탈퇴처리
+    //    탈퇴처리
     @PostMapping("/deleteUser")
     public String deleteUser(@AuthenticationPrincipal BoardPrincipal boardPrincipal){
         String email = boardPrincipal.getUsername();
@@ -158,20 +163,5 @@ public class UserController {
         }
         return ResponseEntity.ok()
                 .build();
-    }
-
-    // 회원 검색
-    @GetMapping("/searchUsers")
-    public List<Users> searchDeleteBoards(@RequestParam("condition") String condition,
-                                                @RequestParam("keyword") String keyword,
-                                                @RequestParam("start") String start,
-                                                @RequestParam("end") String end) {
-
-        if(condition.equals("regdate")||condition.equals("expiredDate")){
-            return userService.searchDateDeleteUsers(condition, start, end);
-        }else {
-            return userService.searchStringDeleteUsers(condition, keyword);
-        }
-
     }
 }

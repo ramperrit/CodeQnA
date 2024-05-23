@@ -115,10 +115,12 @@
 
                             </ul>
                             <!--버튼 -->
+                            <!--                            <form method="post">-->
                             <ul>
                                 <button class="btn btn-warning btn-icon-split" id="restoreBtn" style="padding: 5px" onclick="restoreCheckedUsers()">회원 계정 복구</button>
                                 <button class="btn btn-danger btn-icon-split" id="deleteBtn" style="padding: 5px" onclick="deleteCheckedUsers()">회원 탈퇴</button>
                             </ul>
+                            <!--                            </form>-->
 
                         </div>
 
@@ -308,7 +310,7 @@
 
     // 날짜 포맷팅 함수
     function formatDate(date) {
-        if (!date || isNaN(date.getTime())) {
+        if (!date || !(date instanceof Date) || isNaN(date.getTime())) {
             return ''; // date가 null이거나 유효한 날짜가 아니면 빈 문자열 반환
         }
 

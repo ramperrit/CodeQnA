@@ -28,7 +28,7 @@ public class ReplyApiController {
     // 2. 댓글 생성
     @PostMapping("/api/articles/{articleId}/comments")
     public ResponseEntity<ArticleCommentRequest> create(@PathVariable Long articleId,
-                                             @RequestBody ArticleCommentRequest articleCommentRequest,
+                                                        @RequestBody ArticleCommentRequest articleCommentRequest,
                                                         @AuthenticationPrincipal BoardPrincipal principal) {
         String email  = principal.getName();
         Users user = userRepository.findByEmail(email).orElseThrow();
@@ -61,6 +61,8 @@ public class ReplyApiController {
         String email = principal.getName();
         // 서비스에 위임
         articleCommentService.deleteArticleComment(id,email);
+
+
         // 결과 응답
         return ResponseEntity.ok()
                 .build();

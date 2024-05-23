@@ -28,14 +28,14 @@ public class ArticleCommentRequest {
         return new ArticleCommentRequest(articleId, parentCommentId, content);
     }
 
-    public ArticleCommentDto toDto(UserDto userDto) {
-        return ArticleCommentDto.of(
-                articleId,
-                userDto,
-                parentCommentId,
-                content
-        );
-    }
+//    public ArticleCommentDto toDto(UserDto userDto) {
+//        return ArticleCommentDto.of(
+//                articleId,
+//                userDto,
+//                parentCommentId,
+//                content
+//        );
+//    }
 
 
 

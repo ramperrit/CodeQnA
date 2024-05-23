@@ -1,7 +1,6 @@
 package com.codeqna.service;
 
 import com.codeqna.constant.UserRole;
-import com.codeqna.dto.LogsViewDto;
 import com.codeqna.dto.UserDto;
 import com.codeqna.dto.UserFormDto;
 import com.codeqna.dto.security.BoardPrincipal;
@@ -113,17 +112,11 @@ public class UserService implements UserDetailsService {
         return userRepository.findAll();
     }
 
-
-
     //회원검색조건
     public List<Users> searchUsers(String condition, String keyword){
         if (condition.equals("nickname")){
             return userRepository.findByNicknameContaining(keyword);
-        }else if (condition.equals("email")){
-            return userRepository.findByEmailContaining(keyword);
-        } else if (condition.equals("kakao")) {
-            return userRepository.findByKakaoContaining(keyword);
-        } else {
+        }else {
             // 검색 조건이 잘못된 경우 처리
             throw new IllegalArgumentException("Invalid search condition: " + condition);
         }
@@ -140,7 +133,6 @@ public class UserService implements UserDetailsService {
             throw new UsernameNotFoundException("회원 복구 오류");
         }
     }
-
     //회원 검색 by 가입일, 탈퇴일
     public List<Users> searchDateDeleteUsers(String condition, String start, String end) {
         LocalDateTime startDateTime = convertStringToLocalDateTime(start, false);
@@ -186,10 +178,4 @@ public class UserService implements UserDetailsService {
         LocalDate localDate = LocalDate.parse(dateStr, DateTimeFormatter.ISO_DATE);
         return isEndOfDay ? LocalDateTime.of(localDate, LocalTime.MAX) : LocalDateTime.of(localDate, LocalTime.MIN);
     }
-
-
-
-
-
-
 }

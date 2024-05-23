@@ -49,7 +49,7 @@ public class Reply {
     @OrderBy("regdate ASC")
     @OneToMany(mappedBy = "parentCommentId",cascade = CascadeType.ALL)
     private Set<Reply> childComments = new LinkedHashSet<>();
-    
+
     private Reply(Board board, Users user, Long parentCommentId, String content) {
         this.board = board;
         this.user = user;
@@ -67,7 +67,9 @@ public class Reply {
         this.getChildComments().add(child);
     }
 
-
+    public void deleteReply(){
+        this.reply_condition="Y";
+    }
 
 
 

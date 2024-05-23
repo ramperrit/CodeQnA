@@ -70,6 +70,7 @@ public class ArticleCommentService {
             Board board = boardRepository.findByBno(articleCommentRequest.getArticleId());
             Users user = userRepository.findByEmail(email).orElseThrow();
             Reply reply = Reply.of(board,user,articleCommentRequest.getContent());
+            reply.setReply_condition("N");
 
             if (articleCommentRequest.getParentCommentId() != null) {
                 Reply parentComment = replyRepository.findById(articleCommentRequest.getParentCommentId()).orElseThrow();
@@ -83,7 +84,9 @@ public class ArticleCommentService {
     }
 
     public void deleteArticleComment(Long articleCommentId, String email) {
-        replyRepository.deleteByIdAndUser_Email(articleCommentId, email);
+        Reply reply  = replyRepository.findById(articleCommentId).orElseThrow();
+        reply.deleteReply();
+        //  replyRepository.deleteByIdAndUser_Email(articleCommentId, email);
 
     }
 
