@@ -184,8 +184,21 @@
 
     $(document).ready(function(){
 
-        // 추가 버튼 클릭 시
+        // 해시태그 추가 버튼 클릭 시
         $('#newhashtag').click(function(){
+            addHashtag();
+        });
+
+        // 해시태그 입력 필드에서 엔터 키 눌렀을 때
+        $('#hashtag').keypress(function(event){
+            // 엔터 키의 keyCode는 13입니다.
+            if(event.which === 13) {
+                addHashtag();
+            }
+        });
+
+        // 추가 버튼 클릭 시
+        function addHashtag(){
             // 입력한 해시태그 텍스트 가져오기
             var hashtagText = $('#hashtag').val().trim();
             // 정규표현식을 사용하여 유효성 검사
@@ -321,12 +334,32 @@
 
     if (modifyButton) {
         modifyButton.addEventListener("click", async (event) => {
+            event.preventDefault();
+
+            let content = editor.getHTML();
+            // 정규표현식을 사용하여 주민등록번호를 찾아 마스킹 처리
+            content = content.replace(/\b(\d{6})(\d{7})\b/g, function(_, p1, p2) {
+                return p1 + '*******';
+            });
+            content = content.replace(/\b(\d{6})[- ]?(\d{7})\b/g, function(_, p1, p2) {
+                return p1 + (p2 ? '-*******' : '*******');
+            });
+
             let hashtags = "";
             const hashtagElements = document.querySelectorAll('.hashtag-list .btn-primary');
             hashtagElements.forEach((element, index) => {
                 const hashtagText = element.querySelector('.text').innerText;
                 hashtags += hashtagText;
             });
+
+            // 제목, 내용 입력 여부 확인
+            if (document.getElementById("title").value.trim() === '') {
+                alert('제목을 입력하세요.');
+                return;
+            }else if(content === '<p><br></p>'){
+                alert('내용을 입력하세요.');
+                return;
+            }
 
             try {
                 await Promise.all(deletedFiles.map(fileName => {
@@ -344,7 +377,7 @@
                         bno: document.getElementById("bno").value,
                         title: document.getElementById("title").value,
                         nickname: document.getElementById("nickname").value,
-                        content: editor.getHTML(),
+                        content: content,
                         hashtag: hashtags,
                         heart: document.getElementById('heart').value,
                         hitcount: document.getElementById('hitcount').value,

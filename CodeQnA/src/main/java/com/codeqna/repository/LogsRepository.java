@@ -42,7 +42,7 @@ public interface LogsRepository extends JpaRepository<Logs, Long> {
     List<LogsViewDto> findLogsByDeletetimeBetween(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
     @Query("SELECT new com.codeqna.dto.LogsViewDto(b, l.delete_time, l.recover_time) " +
-            "FROM Logs l INNER JOIN l.board b WHERE l.delete_time BETWEEN :start AND :end")
+            "FROM Logs l INNER JOIN l.board b WHERE l.recover_time BETWEEN :start AND :end")
     List<LogsViewDto> findLogsByRecovertimeBetween(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
 }

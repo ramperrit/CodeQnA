@@ -73,7 +73,7 @@
                             </a>
 
                             <!--CSRF-->
-                            <!--<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">-->
+<!--                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">-->
 
                             <input type="hidden" th:id="errorMessage" th:value="${errorMessage}">
 
@@ -96,31 +96,6 @@
 </script>
 
 <script>
-    function checkNicknameExist() {
-        const nickname = document.getElementById('nickname').value;
-
-        $.ajax({
-            url: `/users/${nickname}/exist`,
-            type: 'GET',
-            success: function(response) {
-                const nicknameError = document.getElementById('nicknameError');
-                const nicknameSuccess = document.getElementById('nicknameSuccess');
-                if (response.exists) {
-                    nicknameError.style.display = 'block';
-                    nicknameSuccess.style.display = 'none';
-                } else {
-                    nicknameError.style.display = 'none';
-                    nicknameSuccess.style.display = 'block';
-                }
-            },
-            error: function() {
-                console.error('닉네임 중복확인 오류');
-            }
-        });
-    }
-</script>
-
-<script>
     function checkPasswordMatch() {
         var password = document.getElementById("password").value;
         var confirmPassword = document.getElementById("passwordRepeat").value;
@@ -137,6 +112,7 @@
         var $form = document.querySelector('form');
         var errorElement = document.getElementById("passwordMatchError");
 
+
         if (password !== confirmPassword) {
             errorElement.style.display = "block";
             $form.addEventListener("submit", preventSubmit);
@@ -152,6 +128,28 @@
     }
 </script>
 
+<script>
+    function checkNicknameExist() {
+        const nickname = document.getElementById('nickname').value;
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', `/users/${nickname}/exist`, true);
+        xhr.onload = function () {
+            const nicknameError = document.getElementById('nicknameError');
+            const nicknameSuccess = document.getElementById('nicknameSuccess');
+            if (xhr.status === 200) {
+                const response = JSON.parse(xhr.responseText);
+                if (response.exists) {
+                    nicknameError.style.display = 'block';
+                    nicknameSuccess.style.display = 'none';
+                } else {
+                    nicknameError.style.display = 'none';
+                    nicknameSuccess.style.display = 'block';
+                }
+            }
+        };
+        xhr.send();
+    }
+</script>
 
 </body>
 

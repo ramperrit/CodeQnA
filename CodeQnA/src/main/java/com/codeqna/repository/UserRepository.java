@@ -1,5 +1,6 @@
 package com.codeqna.repository;
 
+import com.codeqna.entity.Board;
 import com.codeqna.entity.Users;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -23,9 +24,10 @@ public interface UserRepository extends JpaRepository<Users, Long> {
     @Query("SELECT u FROM Users u WHERE u.email LIKE %:email%")
     List<Users> findByEmailContaining(@Param("email") String keyword);
 
-    @Query("SELECT u FROM Users u WHERE u.kakao LIKE %:kakao%")
-    List<Users> findByKakaoContaining(@Param("kakao") String keyword);
+    @Query("SELECT u FROM Users u WHERE u.kakao = :kakao")
+    List<Users> findByKakaoContaining(@Param("kakao") String kakaoCondition);
 
+    //    List<Users> findByKakao(String kakao);
     @Query("SELECT u FROM Users u WHERE u.regdate >= :start")
     List<Users> findLogsByRegdate(@Param("start") LocalDateTime start);
 

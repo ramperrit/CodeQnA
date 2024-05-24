@@ -73,7 +73,7 @@
                             <div class="card md-4 py-3 border-left-primary">
                                 <div class="card-body">
                                     <div class="row">
-                                        <form method="post" action="/users/updateNick" class="w-100 d-flex align-items-center">
+                                        <form class="w-100 d-flex align-items-center">
                                             <div class="col-8">
                                                 <input type="text" id="nick" name="nickname" class="form-control">
                                                 <p id="nicknameError" style="display:none; color:red;">이미 사용 중인 닉네임입니다.</p>
@@ -81,7 +81,7 @@
                                             </div>
                                             <div class="col-4 text-right">
                                                 <button type="button" class="btn btn-secondary" onclick="checkNicknameExist()">중복확인</button>
-                                                <button type="submit" class="btn btn-primary">닉네임 변경</button>
+                                                <button type="button" class="btn btn-primary" onclick="submitForm()">닉네임 변경</button>
                                             </div>
                                         </form>
                                     </div>
@@ -152,6 +152,27 @@
             }
         };
         xhr.send(JSON.stringify({ nickname: nickname }));
+    }
+
+    function submitForm() {
+        var nickname = document.getElementById('nick').value;
+
+        // Ajax 요청으로 서버에 닉네임 업데이트 요청
+        $.ajax({
+            type: "POST",
+            url: "/users/updateNick",
+            data: { nickname: nickname },
+            success: function(data, textStatus, xhr) {
+                // 성공적으로 업데이트되었으므로 페이지 이동
+                alert("닉네임이 변경되었습니다.")
+                window.location.href = "/Loginmain";
+
+            },
+            error: function(xhr, textStatus, errorThrown) {
+                // 오류 발생 시 알림창 표시
+                alert("이미 사용중인 닉네임입니다.");
+            }
+        });
     }
 </script>
 </body>

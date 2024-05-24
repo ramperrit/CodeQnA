@@ -222,7 +222,14 @@
 <!-- 검색에 따라 테이블을 띄워주는 스크립트 -->
 <script>
     $(document).ready(function() {
-        $('#searchButton').click(function() {
+        $('#searchButton').click(search);
+        $('#searchKeyword').keydown(function(event) {
+            if (event.keyCode === 13) { // Enter 키 코드는 13입니다.
+                search();
+            }
+        });
+
+        function search() {
             var searchCondition = $('#searchCondition').val();
             var searchKeyword = $('#searchKeyword').val();
 
@@ -234,16 +241,14 @@
                 return;
             }
 
-            if (searchCondition == "hashtag"){
+            if (searchCondition == "hashtag") {
 
             }
 
             // filterTable 함수 호출
             filterTable(searchCondition, searchKeyword);
-        });
+        }
     });
-
-
 
     function filterTable(searchCondition, searchKeyword) {
         // AJAX를 사용하여 서버에 검색 요청을 보냅니다.

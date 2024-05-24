@@ -5,10 +5,7 @@ import com.codeqna.dto.security.BoardPrincipal;
 import com.codeqna.entity.Board;
 import com.codeqna.entity.Heart;
 import com.codeqna.entity.Users;
-import com.codeqna.service.BoardService;
-import com.codeqna.service.HeartService;
-import com.codeqna.service.ReplyService;
-import com.codeqna.service.UserService;
+import com.codeqna.service.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,7 +23,7 @@ public class BoardApiController {
     private final ReplyService replyService;
     private final HeartService heartService;
     private final UserService userService;
-
+    private final ArticleCommentService articleCommentService;
     // 게시물 등록
     @PostMapping("/register")
     public ResponseEntity<Board> addBoard(@RequestBody AddBoardRequest request,
@@ -100,15 +97,35 @@ public class BoardApiController {
     public List<Users> searchUsers(@RequestParam("condition") String condition,
                                    @RequestParam("keyword") String keyword,
                                    @RequestParam("start") String start,
-                                   @RequestParam("end") String end) {
+                                   @RequestParam("end") String end,
+                                   @RequestParam(value = "kakaoCondition", required = false, defaultValue = "defaultCondition") String kakaoCondition) {
 
         if(condition.equals("regdate")||condition.equals("expiredDate")){
             return userService.searchDateDeleteUsers(condition, start, end);
+        }else if (condition.equals("kakao")) {
+            return userService.searchRadioKakao(kakaoCondition);
         }else {
             return userService.searchStringDeleteUsers(condition, keyword);
         }
 
     }
+    //댓글관리페이지
+    //검색
+    @GetMapping("/searchReplies")
+    public List<RepliesViewDto> searchReplies(@RequestParam("condition") String condition,
+                                   @RequestParam("keyword") String keyword,
+                                   @RequestParam("start") String start,
+                                   @RequestParam("end") String end) {
+
+        if(condition.equals("regdate")||condition.equals("deletetime")||condition.equals("recovertime")){
+            return articleCommentService.searchDateReplies(condition, start, end);
+        }else {
+            return articleCommentService.searchStringReplies(condition, keyword);
+        }
+
+    }
+
+
     // 삭제게시물 전체 불러오는 메서드
     @GetMapping("/deleted")
     public List<LogsViewDto> deletedBoard(){
@@ -143,5 +160,64 @@ public class BoardApiController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error recovering boards");
         }
     }
+//    //댓글 채택
+//    @GetMapping("/reply/adopt/{bno}")
+//    public ResponseEntity<Void> adoptReply(@PathVariable Long bno,
+//                                           @RequestBody Long rno){
+//        boardService.adoptReply(bno,rno);
+//
+//
+//        return ResponseEntity.ok().build();
+//
+//    }
+
+    // 삭제게시물 검색
+    @GetMapping("/searchManageBoardTable")
+    public List<Board> searchManageBoardTable(@RequestParam("condition") String condition,
+                                              @RequestParam("keyword") String keyword,
+                                              @RequestParam("start") String start,
+                                              @RequestParam("end") String end,
+                                              @RequestParam(value = "deleteCondition", required = false, defaultValue = "defaultCondition") String deleteCondition) {
+
+        if(condition.equals("regdate")){
+            return boardService.searchDateBoards(condition, start, end);
+        } else if (condition.equals("boardcondition")) {
+            return boardService.searchRadioDeleteBoards(deleteCondition);
+        } else {
+            return boardService.searchStringBoards(condition, keyword);
+        }
+
+    }
+
+    // 삭제게시물 복원 요청
+    @PostMapping("/recoverDeleteBoard")
+    public ResponseEntity<String> recoverDeleteBoard(@RequestBody List<Long> bnos) {
+        if (bnos == null || bnos.isEmpty()) {
+            return ResponseEntity.badRequest().body("No boards selected for recovery");
+        }
+        try {
+            boardService.recoverDeleteBoards(bnos);
+            return ResponseEntity.ok("Boards recovered successfully");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error recovering boards");
+        }
+    }
+
+    // 관리자가 게시물 삭제 요청
+    @PostMapping("/deleteAdminBoard")
+    public ResponseEntity<String> deleteAdminBoard(@RequestBody List<Long> bnos) {
+        if (bnos == null || bnos.isEmpty()) {
+            return ResponseEntity.badRequest().body("No boards selected for recovery");
+        }
+        try {
+            boardService.checkedDeleteBoardAdmin(bnos);
+            return ResponseEntity.ok("Boards deleted successfully");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error deleting boards");
+        }
+    }
+
+
+
 
 }

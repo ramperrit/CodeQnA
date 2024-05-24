@@ -15,6 +15,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.util.List;
 
 @RequiredArgsConstructor
 @RestController
@@ -26,8 +27,8 @@ public class ReplyApiController {
 
 
     // 2. 댓글 생성
-    @PostMapping("/api/articles/{articleId}/comments")
-    public ResponseEntity<ArticleCommentRequest> create(@PathVariable Long articleId,
+    @PostMapping("/api/comments")
+    public ResponseEntity<ArticleCommentRequest> create(
                                                         @RequestBody ArticleCommentRequest articleCommentRequest,
                                                         @AuthenticationPrincipal BoardPrincipal principal) {
         String email  = principal.getName();
@@ -67,5 +68,29 @@ public class ReplyApiController {
         return ResponseEntity.ok()
                 .build();
     }
+
+
+
+    //다중 삭제 처리
+    @PostMapping("/replies/deleteReplies")
+    public ResponseEntity<?> deleteReplies(@RequestBody List<Long> rnos){
+        for (Long rno: rnos){
+            articleCommentService.deleteReply(rno);
+        }
+        return ResponseEntity.ok()
+                .build();
+    }
+
+    //다중 복구 처리
+    @PostMapping("/replies/restoreReplies")
+    public ResponseEntity<?> restoreReplies(@RequestBody  List<Long> rnos){
+        for (Long rno: rnos){
+            articleCommentService.restoreReply(rno);
+        }
+        return ResponseEntity.ok()
+                .build();
+    }
+
+
 
 }

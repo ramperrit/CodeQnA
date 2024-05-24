@@ -201,8 +201,14 @@
         // 페이지 로드 시 초기 데이터를 가져와서 excelBoard에 저장합니다.
         deleteTableData();
 
-        // 검색 버튼 클릭 이벤트 핸들러를 등록합니다.
-        $('#searchButton').click(function() {
+        $('#searchButton').click(search);
+        $('#searchKeyword').keydown(function(event) {
+            if (event.keyCode === 13) { // Enter 키 코드는 13입니다.
+                search();
+            }
+        });
+
+        function search() {
             var searchCondition = $('#searchCondition').val();
             var searchKeyword = $('#searchKeyword').val();
             var starttime = $('#startTime').val();
@@ -229,7 +235,7 @@
             // filterTable 함수 호출
             filterTable(searchCondition, searchKeyword, starttime, endtime);
 
-        });
+        }
     });
 
     // 초기 데이터를 가져와서 excelBoard에 저장하는 함수
@@ -385,7 +391,7 @@
 
             // 서버로 선택된 게시물 ID 전송
             $.ajax({
-                url: '/boardAPI/recoverBoard', // 복원 API 엔드포인트 URL
+                url: '/boardAPI/recoverDeleteBoard', // 복원 API 엔드포인트 URL
                 type: 'POST',
                 contentType: 'application/json',
                 data: JSON.stringify(selectedBoards.map(board => board.bno)),

@@ -21,6 +21,7 @@ import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import java.util.Map;
@@ -33,6 +34,9 @@ import static org.springframework.security.web.util.matcher.AntPathRequestMatche
 public class SecurityConfig {
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private UserService userService;
 
     @Bean
     public PasswordEncoder passwordEncoder(){
@@ -61,8 +65,8 @@ public class SecurityConfig {
                 .invalidateHttpSession(true)
                 .deleteCookies("JSESSIONID")
         );
-
         http.oauth2Login(oAuth -> oAuth
+
 
                 .userInfoEndpoint(endpoint -> endpoint
                         .userService(oAuth2UserService)
@@ -89,6 +93,9 @@ public class SecurityConfig {
                 .anyRequest().authenticated();
         });
 
+//ip찍기
+        http.addFilterBefore(new VisitorFilter(userService), UsernamePasswordAuthenticationFilter.class);
+
         return http.build();
     }
 
@@ -112,6 +119,7 @@ public class SecurityConfig {
                 request.getSession().invalidate();
                 response.sendRedirect("/users/login/expired");
             }
+         //   response.sendRedirect("/Loginmain");
         });
     }
 
@@ -119,7 +127,9 @@ public class SecurityConfig {
     public AuthenticationSuccessHandler customAuthenticationSuccessHandler() {
         return new CustomAuthenticationSuccessHandler(userRepository);
     }
-    
+
+
+
     @Bean
     public OAuth2UserService<OAuth2UserRequest, OAuth2User> oAuth2UserService(
             UserService userService

@@ -27,7 +27,7 @@ public class ReplyService {
     public void addComment(ParentReplyDto parentReplyDto) {
         System.out.println("댓글 등록 성공띠");
         Reply reply = new Reply();
-        reply.setNickname(parentReplyDto.getNickname());
+        //reply.setNickname(parentReplyDto.getNickname());
         reply.setContent(parentReplyDto.getContent());
         //bno만 가져올 순 없고 board 자체를 넣어야함
         Board board = boardService.findByBno(parentReplyDto.getBno());

@@ -4,14 +4,8 @@ import com.codeqna.dto.AddBoardRequest;
 import com.codeqna.dto.BoardViewDto;
 import com.codeqna.dto.LogsViewDto;
 import com.codeqna.dto.ModifyBoardRequest;
-import com.codeqna.entity.Board;
-import com.codeqna.entity.Logs;
-import com.codeqna.entity.Uploadfile;
-import com.codeqna.entity.Users;
-import com.codeqna.repository.BoardRepository;
-import com.codeqna.repository.LogsRepository;
-import com.codeqna.repository.UploadfileRepository;
-import com.codeqna.repository.UserRepository;
+import com.codeqna.entity.*;
+import com.codeqna.repository.*;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -26,6 +20,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Transactional
 @Service
 @RequiredArgsConstructor
 public class BoardService {
@@ -34,13 +29,16 @@ public class BoardService {
     private final LogsRepository logsRepository;
     private final UserService userService;
     private final UserRepository userRepository;
+    private final ReplyRepository replyRepository;
 
     // 게시물 전체 리스트를 가져오기
+    @Transactional(readOnly = true)
     public List<Board> getAllBoards() {
         return boardRepository.findAll();
     }
 
     // 검색조건에 맞는 게시물을 가져오기
+    @Transactional(readOnly = true)
     public List<Board> searchBoards(String condition, String keyword) {
         if (condition.equals("title")) {
             return boardRepository.findByTitleContaining(keyword, "N");
@@ -61,6 +59,7 @@ public class BoardService {
     }
 
     //게시물 상세 페이지 가져오기
+    @Transactional(readOnly = true)
     public Board findByBno(Long bno) {
         return boardRepository.findByBno(bno);
     }
@@ -125,7 +124,6 @@ public class BoardService {
     }
 
     //게시물 삭제
-    @Transactional //이게 왜 붙어야하는지 모르겠음
     public void deleteBoard(Long bno) {
         System.out.println("요까지2");
         Board board = boardRepository.findByBno(bno);
@@ -134,7 +132,6 @@ public class BoardService {
     }
 
     //게시물 좋아요
-    @Transactional
     public void increaseHeart(Long bno) {
         Board board = boardRepository.findByBno(bno);
 
@@ -142,7 +139,6 @@ public class BoardService {
     }
 
     //게시물 좋아요 취소
-    @Transactional
     public void decreaseHeart(Long bno) {
         System.out.println("좋아요 취소");
         Board board = boardRepository.findByBno(bno);
@@ -151,6 +147,7 @@ public class BoardService {
     }
 
     // 삭제게시물 가져올때 로그와 같이 가져오는 메서드
+    @Transactional(readOnly = true)
     public List<LogsViewDto> getLogWithBoard() {
         List<LogsViewDto> LogsViews = new ArrayList<>();
 
@@ -169,6 +166,7 @@ public class BoardService {
     }
 
     // 삭제게시물에서 날짜검색 게시물 가져오기
+    @Transactional(readOnly = true)
     public List<LogsViewDto> searchDateDeleteBoards(String condition, String start, String end) {
         LocalDateTime startDateTime = convertStringToLocalDateTime(start, false);
 
@@ -198,6 +196,7 @@ public class BoardService {
     }
 
     // 삭제게시물에서 String 검색 게시물을 가져오기
+    @Transactional(readOnly = true)
     public List<LogsViewDto> searchStringDeleteBoards(String condition, String keyword) {
         if (condition.equals("title")) {
             return logsRepository.findLogsByTitle(keyword);
@@ -216,7 +215,6 @@ public class BoardService {
     }
 
     // 삭제게시물을 복원하는 메서드
-    @Transactional
     public void recoverBoards(List<Long> bnos) {
         for (Long bno : bnos) {
             Board board = boardRepository.findByBno(bno);
@@ -234,6 +232,103 @@ public class BoardService {
             }
         }
     }
+
+    // 게시판관리 String 검색
+    public List<Board> searchStringBoards(String condition, String keyword){
+        if (condition.equals("title")) {
+            return boardRepository.findByBoardTitleContaining(keyword);
+        } else if (condition.equals("nickname")) {
+            return boardRepository.findByBoardNicknameContaining(keyword);
+        } else {
+            // 검색 조건이 잘못된 경우 처리
+            throw new IllegalArgumentException("Invalid search condition: " + condition);
+        }
+    }
+
+    // 게시판관리 Date 검색
+    public List<Board> searchDateBoards(String condition, String start, String end) {
+        LocalDateTime startDateTime = convertStringToLocalDateTime(start, false);
+
+        if (end == null || end.isEmpty()) {
+            if (condition.equals("regdate")) {
+                return boardRepository.findByBoardRegdate(startDateTime);
+            }
+        } else {
+            LocalDateTime endDateTime = convertStringToLocalDateTime(end, true);
+
+            // 기존의 날짜 범위 검색 메서드 호출
+            if (condition.equals("regdate")) {
+                return boardRepository.findByBoardRegdateBetween(startDateTime, endDateTime);
+            }
+        }
+
+        // 검색 조건이 잘못된 경우 처리
+        throw new IllegalArgumentException("Invalid search condition: " + condition);
+    }
+
+    // 게시판관리 라디오 검색
+    public List<Board> searchRadioDeleteBoards(String deleteCondition){
+        return boardRepository.findByBoardconditionContaining(deleteCondition);
+    }
+
+    // 삭제게시물 복원하는 메서드
+    @Transactional
+    public void recoverDeleteBoards(List<Long> bnos) {
+        for (Long bno : bnos) {
+            Board board = boardRepository.findByBno(bno);
+            if (board != null) {
+                // 복원일시 업데이트
+                Logs log = logsRepository.findByBoard(board);
+                if (log != null) {
+                    log.setRecover_time(LocalDateTime.now());
+                    logsRepository.save(log);
+                }
+
+                // 게시물 상태 업데이트
+                board.setBoard_condition("N");
+                boardRepository.save(board);
+            }
+        }
+    }
+
+    // 관리자가 게시물을 삭제한 경우
+    @Transactional
+    public void checkedDeleteBoardAdmin(List<Long> bnos) {
+        for (Long bno : bnos) {
+            Board board = boardRepository.findByBno(bno);
+            if (board != null) {
+                // 게시물 삭제 상태로 변경
+                board.deleteBoard();
+
+                // 로그 생성 및 저장
+                Logs existingLog = logsRepository.findByBoard(board);
+                if (existingLog != null) {
+                    // 이미 존재하는 로그가 있으면 업데이트
+                    existingLog.setDelete_time(LocalDateTime.now());
+                    existingLog.setRecover_time(null); // 복원일시를 null로 설정
+                    logsRepository.save(existingLog);
+                } else {
+                    // 존재하지 않는 경우 새로운 로그 생성
+                    Logs newLog = new Logs();
+                    newLog.setBoard(board);
+                    newLog.setDelete_time(LocalDateTime.now());
+                    logsRepository.save(newLog);
+                }
+
+            }else {
+                throw new IllegalArgumentException("Invalid board Id: " + bno);
+            }
+
+        }
+    }
+
+//    public void adoptReply(Long bno, Long rno) {
+//        Board board = boardRepository.findByBno(bno);
+//        board.setAdoptedReply(rno);
+//        Reply reply = replyRepository.findById(rno).orElseThrow();
+//        reply.setAdopted("Y");
+//    }
+
 
 }
 

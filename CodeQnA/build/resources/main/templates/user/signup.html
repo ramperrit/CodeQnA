@@ -129,35 +129,15 @@
 </script>
 
 <script>
-    // function checkNicknameExist() {
-    //     const nickname = document.getElementById('nickname').value;
-    //     const xhr = new XMLHttpRequest();
-    //     xhr.open('GET', `/users/${nickname}/exist`, true);
-    //     xhr.onload = function () {
-    //         const nicknameError = document.getElementById('nicknameError');
-    //         const nicknameSuccess = document.getElementById('nicknameSuccess');
-    //         if (xhr.status === 200) {
-    //             const response = JSON.parse(xhr.responseText);
-    //             if (response.exists) {
-    //                 nicknameError.style.display = 'block';
-    //                 nicknameSuccess.style.display = 'none';
-    //             } else {
-    //                 nicknameError.style.display = 'none';
-    //                 nicknameSuccess.style.display = 'block';
-    //             }
-    //         }
-    //     };
-    //     xhr.send();
-    // }
     function checkNicknameExist() {
         const nickname = document.getElementById('nickname').value;
-
-        $.ajax({
-            url: `/users/${nickname}/exist`,
-            type: 'GET',
-            success: function(response) {
-                const nicknameError = document.getElementById('nicknameError');
-                const nicknameSuccess = document.getElementById('nicknameSuccess');
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', `/users/${nickname}/exist`, true);
+        xhr.onload = function () {
+            const nicknameError = document.getElementById('nicknameError');
+            const nicknameSuccess = document.getElementById('nicknameSuccess');
+            if (xhr.status === 200) {
+                const response = JSON.parse(xhr.responseText);
                 if (response.exists) {
                     nicknameError.style.display = 'block';
                     nicknameSuccess.style.display = 'none';
@@ -165,11 +145,9 @@
                     nicknameError.style.display = 'none';
                     nicknameSuccess.style.display = 'block';
                 }
-            },
-            error: function() {
-                console.error('닉네임 중복확인 오류');
             }
-        });
+        };
+        xhr.send();
     }
 </script>
 

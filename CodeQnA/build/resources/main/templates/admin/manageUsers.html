@@ -62,7 +62,6 @@
         }
     </style>
 
-
 </head>
 
 <body id="page-top">
@@ -79,7 +78,6 @@
             <!-- 헤더 -->
             <div th:insert="~{admin/fragments/adminHeader :: #header}"></div>
 
-
             <!-- Begin Page Content -->
             <div class="container-fluid">
 
@@ -92,7 +90,7 @@
                     <!--검색 및 버튼-->
                     <div class="card-body">
                         <div class="form-inline">
-                            <ul class="mr-auto">
+                            <ul class="mr-auto form-inline">
                                 <!--검색-->
                                 <select class="form-control" style="width: auto;" id="searchCondition">
                                     <option value="nickname">닉네임</option>
@@ -110,17 +108,26 @@
                                 <!-- 끝 날짜 선택 -->
                                 <input type="date" class="form-control d-none" id="endTime">
 
+                                <!---->
+                                <div id="kakaoCheckBox" class="form-check form-check-inline ml-2">
+                                    <label class="form-check-label p-2" style="margin-left: 10px" for="kakaoCheckboxY">Y</label>
+                                    <input class="form-check-input" type="radio" name="kakaoCheckbox" id="kakaoCheckboxY" value="Y">
+                                    <label class="form-check-label p-2" style="margin-left: 10px" for="kakaoCheckboxN">N</label>
+                                    <input class="form-check-input" type="radio" name="kakaoCheckbox" id="kakaoCheckboxN" value="N">
+                                </div>
+
+
                                 <!-- 검색 버튼 -->
                                 <button id="searchButton" type="submit" class="btn btn-primary">검색</button>
 
                             </ul>
                             <!--버튼 -->
-                            <!--                            <form method="post">-->
+                            <!--<form method="post">-->
                             <ul>
                                 <button class="btn btn-warning btn-icon-split" id="restoreBtn" style="padding: 5px" onclick="restoreCheckedUsers()">회원 계정 복구</button>
                                 <button class="btn btn-danger btn-icon-split" id="deleteBtn" style="padding: 5px" onclick="deleteCheckedUsers()">회원 탈퇴</button>
                             </ul>
-                            <!--                            </form>-->
+                            <!--</form>-->
 
                         </div>
 
@@ -162,7 +169,6 @@
         </div>
         <!-- End of Main Content -->
 
-
     </div>
     <!-- End of Content Wrapper -->
     <!-- 푸터 -->
@@ -193,12 +199,30 @@
             $('#endTime').removeClass('d-none');
             // 검색어 입력창 숨김
             $('#searchKeyword').addClass('d-none');
+            $('#searchButton').removeClass('d-none');
+            // 카카오 여부 선택 숨김
+            $('#kakaoCheckBox').addClass('d-none');
+        }else if (searchCondition === "kakao") {
+            // 카카오 여부 선택 표시
+            $('#kakaoCheckBox').removeClass('d-none');
+            // 검색어 입력창 숨김
+            $('#searchKeyword').addClass('d-none');
+            // 날짜 선택창 숨김
+            $('#startTime').addClass('d-none');
+            $('#endTime').addClass('d-none');
+            // 검색 버튼 표시
+            $('#searchButton').addClass('d-none');
         } else {
             // 검색어 입력창 표시
             $('#searchKeyword').removeClass('d-none');
             // 날짜 선택창 숨김
             $('#startTime').addClass('d-none');
             $('#endTime').addClass('d-none');
+            // 삭제 여부 선택 숨김
+            $('#kakaoCheckBox').addClass('d-none');
+            // 검색 버튼 표시
+            $('#searchButton').removeClass('d-none');
+
         }
     }
 </script>
@@ -206,11 +230,22 @@
 <!-- 검색에 따라 테이블을 띄워주는 스크립트 -->
 <script>
     $(document).ready(function() {
+        // 라디오 버튼 클릭 이벤트 핸들러를 등록합니다.
+        $('input[name="kakaoCheckbox"]').change(function() {
+            triggerSearch();
+        });
+
+        // 검색 버튼 클릭 이벤트 핸들러를 등록합니다.
         $('#searchButton').click(function() {
+            triggerSearch();
+        });
+
+        function triggerSearch() {
             var searchCondition = $('#searchCondition').val();
             var searchKeyword = $('#searchKeyword').val();
             var starttime = $('#startTime').val();
             var endtime = $('#endTime').val();
+            var kakaoCondition = $('input[name="kakaoCheckbox"]:checked').val();
 
             if(searchCondition === "regdate" || searchCondition === "expiredDate"){
                 // 검색어가 비어있는지 확인
@@ -218,7 +253,9 @@
                     alert("시작날짜를 선택해주세요");
                     return;
                 }
-            }else{
+            }else if(searchCondition === "kakao"){
+                console.log(kakaoCondition);
+            } else{
                 // 검색어가 비어있는지 확인
                 if (!searchKeyword) {
                     alert("검색어를 입력하세요");
@@ -227,17 +264,17 @@
             }
 
             // filterTable 함수 호출
-            filterTable(searchCondition, searchKeyword, starttime, endtime);
+            filterTable(searchCondition, searchKeyword, starttime, endtime, kakaoCondition);
 
-        });
+        }
     });
 
-    function filterTable(searchCondition, searchKeyword, starttime, endtime) {
+    function filterTable(searchCondition, searchKeyword, starttime, endtime, kakaoCondition) {
         // AJAX를 사용하여 서버에 검색 요청을 보냅니다.
         $.ajax({
             url: '/boardAPI/searchUsers', // 검색을 처리하는 서버 엔드포인트 URL
             type: 'GET',
-            data: { condition: searchCondition, keyword: searchKeyword, start: starttime, end: endtime },
+            data: { condition: searchCondition, keyword: searchKeyword, start: starttime, end: endtime, kakaoCondition: kakaoCondition },
             success: function (data) {
                 // 검색 결과를 받아옵니다.
                 var searchData = data;
@@ -331,6 +368,12 @@
         // var token = $("meta[name='_csrf']").attr("content");
         // var header = $("meta[name='_csrf_header']").attr("content");
         const checkboxes = document.querySelectorAll('.userCheckbox:checked');
+
+
+        if (checkboxes.length === 0) {
+            alert("삭제할 회원을 선택해주세요.");
+            return;
+        }
         let checked = true;
         var email_arr = [];
         var url = "/users/deleteUsers";
@@ -385,6 +428,12 @@
         // var token = $("meta[name='_csrf']").attr("content");
         // var header = $("meta[name='_csrf_header']").attr("content");
         const checkboxes = document.querySelectorAll('.userCheckbox:checked');
+
+        if (checkboxes.length === 0) {
+            alert("복구할 회원을 선택해주세요.");
+            return;
+        }
+
         let checked = true;
         var email_arr = [];
         var url = "/users/restoreUsers";

@@ -3,6 +3,7 @@ package com.codeqna.controller;
 
 import com.codeqna.dto.BoardViewDto;
 import com.codeqna.dto.LogsViewDto;
+import com.codeqna.dto.RepliesViewDto;
 import com.codeqna.dto.UserFormDto;
 import com.codeqna.dto.request.ArticleCommentRequest;
 import com.codeqna.dto.response.ArticleCommentResponse;
@@ -10,14 +11,17 @@ import com.codeqna.dto.response.ArticleResponse;
 import com.codeqna.dto.security.BoardPrincipal;
 import com.codeqna.entity.Board;
 import com.codeqna.entity.Reply;
+import com.codeqna.entity.Uploadfile;
 import com.codeqna.entity.Users;
 import com.codeqna.repository.BoardRepository;
+import com.codeqna.repository.UploadfileRepository;
 import com.codeqna.repository.UserRepository;
 import com.codeqna.service.ArticleCommentService;
 import com.codeqna.service.BoardService;
 import com.codeqna.service.ReplyService;
 import com.codeqna.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -43,9 +47,17 @@ public class ViewController {
     private final ReplyService replyService;
     private final ArticleCommentService articleCommentService;
     private final UserService userService;
+    private final UploadfileRepository uploadfileRepository;
+
+    @Value("${upload.path}")
+    private String uploadPath;
 
     @GetMapping("/main")
     public String boardList(Model model) {
+
+        //방문자수
+        long visitorCnt = userService.getTodayVisitor();
+        model.addAttribute("visitorCnt", visitorCnt);
         // 게시글 목록을 가져와서 모델에 추가
         List<Board> boards = boardService.getAllBoards();
         model.addAttribute("boards", boards);
@@ -54,6 +66,10 @@ public class ViewController {
 
     @GetMapping("/Loginmain")
     public String Loginmainpage(Model model, @AuthenticationPrincipal BoardPrincipal boardPrincipal ){
+        //방문자수
+        long visitorCnt = userService.getTodayVisitor();
+        model.addAttribute("visitorCnt", visitorCnt);
+
         List<Board> boards = boardService.getAllBoards();
         model.addAttribute("boards", boards);
 
@@ -67,32 +83,67 @@ public class ViewController {
 
     @GetMapping("/admin/deleted")
     public String deletedBoard(Model model){
+        //방문자수
+        long visitorCnt = userService.getTodayVisitor();
+        model.addAttribute("visitorCnt", visitorCnt);
+
         List<LogsViewDto> boards = boardService.getLogWithBoard();
         model.addAttribute("boards", boards);
         return "admin/deletedBoards";
     }
 
     @GetMapping("/admin/boards")
-    public String manageBoards(){
+    public String manageBoards(Model model){
+        List<Board> boards = boardService.getAllBoards();
+        model.addAttribute("boards", boards);
+        //방문자수
+        long visitorCnt = userService.getTodayVisitor();
+        model.addAttribute("visitorCnt", visitorCnt);
         return "admin/manageBoards";
     }
 
     @GetMapping("/admin/comments")
-    public String manageComments(){return "admin/manageComments";}
+    public String manageComments(Model model){
+
+        //방문자수
+        long visitorCnt = userService.getTodayVisitor();
+        model.addAttribute("visitorCnt", visitorCnt);
+        List<RepliesViewDto> replies = articleCommentService.getReplies();
+        model.addAttribute("replies", replies);
+        return "admin/manageComments";}
 
     @GetMapping("/admin/users")
     public String manageUsers(Model model){
+        //방문자수
+        long visitorCnt = userService.getTodayVisitor();
+        model.addAttribute("visitorCnt", visitorCnt);
         List<Users> users = userService.getAllUsers();
         model.addAttribute("users", users);
         return "admin/manageUsers";
     }
     @GetMapping("/admin/files")
-    public String manageFiles(){
+    public String manageFiles(Model model){
+
+        //방문자수
+        long visitorCnt = userService.getTodayVisitor();
+        model.addAttribute("visitorCnt", visitorCnt);
         return "admin/manageFiles";
+    }
+
+    @GetMapping("/admin/visitorDashboard")
+    public String visitorDashboard(Model model){
+
+        //방문자수
+        long visitorCnt = userService.getTodayVisitor();
+        model.addAttribute("visitorCnt", visitorCnt);
+        return "admin/visitorDashboard";
     }
 
     @GetMapping("/newboard")
     public String newboard(Model model, @AuthenticationPrincipal BoardPrincipal boardPrincipal ){
+        //방문자수
+        long visitorCnt = userService.getTodayVisitor();
+        model.addAttribute("visitorCnt", visitorCnt);
 
         String email = boardPrincipal.getUsername();
         Users users = userRepository.findByEmail(email).orElseThrow();
@@ -108,6 +159,10 @@ public class ViewController {
     public String modifyboard(@RequestParam(required = false) Long bno, Model model
     ,  @AuthenticationPrincipal BoardPrincipal boardPrincipal){
 
+        //방문자수
+        long visitorCnt = userService.getTodayVisitor();
+        model.addAttribute("visitorCnt", visitorCnt);
+
         String email = boardPrincipal.getUsername();
         Users users = userRepository.findByEmail(email).orElseThrow();
         model.addAttribute("nickname", users.getNickname());
@@ -122,6 +177,10 @@ public class ViewController {
     @GetMapping("/viewboard/{bno}")
     public String viewBoard(@PathVariable Long bno, Model model
             , @AuthenticationPrincipal BoardPrincipal boardPrincipal) {
+
+        //방문자수
+        long visitorCnt = userService.getTodayVisitor();
+        model.addAttribute("visitorCnt", visitorCnt);
 
         Board board = boardService.findByBno(bno);
         //없는 게시물에 들어갔을 때
@@ -156,6 +215,12 @@ public class ViewController {
         } else{
             model.addAttribute("nickname", "");
         }
+        // 파일정보 가져오는 부분
+        List<Uploadfile> uploadfiles = uploadfileRepository.findByBoard_Bno(bno);
+
+        model.addAttribute("uploadPath", uploadPath);
+
+        model.addAttribute("files", uploadfiles);
 
         model.addAttribute("board", articleResponse);
 

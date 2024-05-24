@@ -53,6 +53,10 @@ public class Board {
     @Column(name = "board_condition", nullable = false, columnDefinition = "VARCHAR(5) DEFAULT 'N' ")
     private String board_condition;
 
+//    @Column(name="adoptedReply")
+//    private Long adoptedReply;
+
+
     @Builder
     public Board(String title, String content, String hashtag, Long hitcount, Long heart, String nickname, String board_condition){
         this.title = title;

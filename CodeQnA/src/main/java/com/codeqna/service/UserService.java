@@ -6,7 +6,9 @@ import com.codeqna.dto.UserFormDto;
 import com.codeqna.dto.security.BoardPrincipal;
 import com.codeqna.entity.Board;
 import com.codeqna.entity.Users;
+import com.codeqna.entity.Visitor;
 import com.codeqna.repository.UserRepository;
+import com.codeqna.repository.VisitorRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
@@ -32,6 +34,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class UserService implements UserDetailsService {
     private final UserRepository userRepository;
+    private final VisitorRepository visitorRepository;
 
 
     @Transactional(readOnly = true)
@@ -164,9 +167,7 @@ public class UserService implements UserDetailsService {
             return userRepository.findByNicknameContaining(keyword);
         }else if (condition.equals("email")){
             return userRepository.findByEmailContaining(keyword);
-        } else if (condition.equals("kakao")) {
-            return userRepository.findByKakaoContaining(keyword);
-        } else {
+        }  else {
             // 검색 조건이 잘못된 경우 처리
             throw new IllegalArgumentException("Invalid search condition: " + condition);
         }
@@ -178,4 +179,37 @@ public class UserService implements UserDetailsService {
         LocalDate localDate = LocalDate.parse(dateStr, DateTimeFormatter.ISO_DATE);
         return isEndOfDay ? LocalDateTime.of(localDate, LocalTime.MAX) : LocalDateTime.of(localDate, LocalTime.MIN);
     }
+
+    //방문자수 -----------------------------------
+
+    //ip찍기
+    public void saveIp(String ipAddr) {
+        LocalDate today = LocalDate.now();
+
+        // 날짜 리스트 조회
+        List<Visitor> visitors = visitorRepository.findByIpAddr(ipAddr);
+
+        // 최신 날짜를 찾아 비교
+        boolean isNewVisit = visitors.stream()
+                .map(Visitor::getVDate)
+                .noneMatch(today::equals);
+
+        if (isNewVisit) {
+            Visitor newVisitor = new Visitor();
+            newVisitor.setIpAddr(ipAddr);
+            newVisitor.setVDate(today);
+            visitorRepository.save(newVisitor);
+        }
+    }
+
+    //당일 방문자 수
+    public long getTodayVisitor(){
+        LocalDate today = LocalDate.now();
+        return visitorRepository.findByVDate(today).size();
+    }
+    // 카카오 라디오 검색
+    public List<Users> searchRadioKakao(String kakaoCondition){
+        return userRepository.findByKakaoContaining(kakaoCondition);
+    }
+
 }
