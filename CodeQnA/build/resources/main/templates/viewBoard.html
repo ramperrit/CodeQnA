@@ -306,15 +306,11 @@
                                         data-bs-toggle="modal"
                                         data-bs-target="#comment-edit-modal"
                                         th:attr="data-bs-id=${rep.id},data-bs-body=${rep.content}"
-                                        th:if="${#authorization.expression('isAuthenticated()')} and ${rep.email} == ${#authentication.name}">
-                                    수정
-                                </button>
+                                        th:if="${#authorization.expression('isAuthenticated()')} and ${rep.email} == ${#authentication.name} and ${rep.reply_condition=='N'}">
+                                    수정</button>
 
-                                <button type="button" class="btn btn-danger btn-sm comment-delete-btn"
-                                        th:attr="data-comment-id=${rep.id}"
-                                        th:if="${#authorization.expression('hasRole(''ROLE_ADMIN'')')} or ${rep.email} == ${#authentication.name}">
-                                    삭제
-                                </button>
+                                <button type="button" class="btn btn-danger btn-sm comment-delete-btn"   th:attr="data-comment-id=${rep.id}"
+                                        th:if="${rep.reply_condition=='N'} and ${#authorization.expression('hasRole(''ROLE_ADMIN'')')} or ${rep.reply_condition=='N'} and ${rep.email} == ${#authentication.name}">삭제</button>
                             </div>
                         </div>
                     </form>
@@ -347,14 +343,11 @@
                                                 data-bs-toggle="modal"
                                                 data-bs-target="#comment-edit-modal"
                                                 th:attr="data-bs-id=${childComment.id},data-bs-body=${childComment.content}"
-                                                th:if="${#authorization.expression('isAuthenticated()')} and ${childComment.email} == ${#authentication.name}">
-                                            수정
-                                        </button>
+                                                th:if="${#authorization.expression('isAuthenticated()')} and ${childComment.email} == ${#authentication.name} and ${childComment.reply_condition=='N'}">수정</button>
 
-                                        <button type="button" class="btn btn-danger btn-sm comment-delete-btn"
-                                                th:if="${#authorization.expression('hasRole(''ROLE_ADMIN'')')} or ${childComment.email} == ${#authentication.name}"
-                                                th:attr="data-comment-id=${childComment.id}">삭제
-                                        </button>
+                                        <button type="button" class="btn btn-sm btn-danger comment-delete-btn" th:if="${#authorization.expression('hasRole(''ROLE_ADMIN'')')} and ${childComment.reply_condition=='N'}
+                                             or ${childComment.email} == ${#authentication.name} and ${childComment.reply_condition=='N'}"
+                                                th:attr="data-comment-id=${childComment.id}">삭제</button>
 
                                     </div>
                                 </div>

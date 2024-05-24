@@ -162,7 +162,7 @@
                                 <tr th:each="board : ${boards}" th:if="${board.board_condition} == 'N'" th:attr="data-url=@{'/viewboard/' + ${board.bno}}">
                                     <td th:text="${board.bno}"></td>
                                     <td th:text="${board.title}"></td>
-                                    <td th:text="${board.nickname}"></td>
+                                    <td th:text="${board.getUser().getNickname()}"></td>
                                     <td th:text="${board.hashtag}"></td>
                                     <td th:text="${board.hitcount}"></td>
                                     <td th:text="${board.heart}"></td>

@@ -61,8 +61,8 @@ public class SecurityConfig {
                 .invalidateHttpSession(true)
                 .deleteCookies("JSESSIONID")
         );
-        http.oauth2Login(oAuth -> oAuth
 
+        http.oauth2Login(oAuth -> oAuth
 
                 .userInfoEndpoint(endpoint -> endpoint
                         .userService(oAuth2UserService)
@@ -89,8 +89,6 @@ public class SecurityConfig {
                 .anyRequest().authenticated();
         });
 
-//        http.exceptionHandling((e) -> e.authenticationEntryPoint(new CustomAuthenticationEntryPoint()));
-
         return http.build();
     }
 
@@ -114,7 +112,6 @@ public class SecurityConfig {
                 request.getSession().invalidate();
                 response.sendRedirect("/users/login/expired");
             }
-         //   response.sendRedirect("/Loginmain");
         });
     }
 
@@ -122,9 +119,7 @@ public class SecurityConfig {
     public AuthenticationSuccessHandler customAuthenticationSuccessHandler() {
         return new CustomAuthenticationSuccessHandler(userRepository);
     }
-
-
-
+    
     @Bean
     public OAuth2UserService<OAuth2UserRequest, OAuth2User> oAuth2UserService(
             UserService userService
