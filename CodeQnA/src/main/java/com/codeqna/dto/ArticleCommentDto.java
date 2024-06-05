@@ -24,19 +24,10 @@ public class ArticleCommentDto {
     private String content;
     private LocalDateTime regdate;
     private String reply_condition;
+    private String adopted;
+    private Long adoption;
 
 
-    public static ArticleCommentDto of(Long articleId, UserDto memberDto, String content,String reply_condition) {
-        return ArticleCommentDto.of(articleId, memberDto, null, content,reply_condition);
-    }
-
-    public static ArticleCommentDto of(Long articleId, UserDto memberDto, Long parentCommentId, String content,String reply_condition) {
-        return ArticleCommentDto.of(null, articleId, memberDto, parentCommentId, content, null,reply_condition);
-    }
-
-    public static ArticleCommentDto of(Long id, Long articleId, UserDto memberDto, Long parentCommentId, String content, LocalDateTime createdAt,String reply_condition) {
-        return new ArticleCommentDto(id, articleId, memberDto, parentCommentId, content, createdAt,reply_condition);
-    }
 
     public static ArticleCommentDto from(Reply entity) {
         return new ArticleCommentDto(
@@ -46,7 +37,9 @@ public class ArticleCommentDto {
                 entity.getParentCommentId(),
                 entity.getContent(),
                 entity.getRegdate(),
-                entity.getReply_condition()
+                entity.getReply_condition(),
+                entity.getAdopted(),
+                entity.getUser().getAdoption()
 
         );
     }

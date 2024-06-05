@@ -57,15 +57,6 @@ public record BoardPrincipal(
         );
     }
 
-//    public UserDto toDto() {
-//        return UserDto.of(
-//                username,
-//                nickname,
-//                password
-//
-//
-//        );
-//    }
 
 
     @Override public String getUsername() { return username; }
@@ -80,14 +71,5 @@ public record BoardPrincipal(
     @Override public Map<String, Object> getAttributes() { return oAuth2Attributes; }
     @Override public String getName() { return username; }
 
-    public enum RoleType {
-        USER("ROLE_USER");
-
-        @Getter private final String name;
-
-        RoleType(String name) {
-            this.name = name;
-        }
-    }
 
 }

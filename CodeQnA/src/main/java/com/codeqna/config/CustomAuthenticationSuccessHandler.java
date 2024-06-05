@@ -24,7 +24,7 @@ private final UserRepository userRepository;
         String email = authentication.getName();
         Users users = userRepository.findByEmail(email).orElseThrow();
         if (users.getUser_condition().equals("N")) {
-            response.sendRedirect("/Loginmain");
+            response.sendRedirect("/main");
         } else {
             SecurityContextHolder.clearContext();
             request.getSession().invalidate();

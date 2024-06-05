@@ -13,9 +13,9 @@ public class Heart {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "hno", nullable = false)
     private Long hno;
-
-    @Column(name = "nickname")
-    private String nickname;
+//
+//    @Column(name = "nickname")
+//    private String nickname;
 
     @ManyToOne
     @JoinColumn(name = "email",referencedColumnName = "email")

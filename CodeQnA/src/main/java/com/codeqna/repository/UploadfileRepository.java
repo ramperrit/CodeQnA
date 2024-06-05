@@ -14,5 +14,5 @@ public interface UploadfileRepository extends JpaRepository<Uploadfile, Long> {
     List<Uploadfile> findByBoard_Bno(Long bno);
 
     @Query(value = "SELECT * FROM uploadfile WHERE bno = :bno AND saved_file_name = :savedFileName", nativeQuery = true)
-    Uploadfile findByOriginalFileName(@Param("savedFileName") String savedFileName, @Param("bno") Long bno);
+    Uploadfile findByOriginalFileName(@Param("savedFileName") String saved_file_name, @Param("bno") Long bno);
 }

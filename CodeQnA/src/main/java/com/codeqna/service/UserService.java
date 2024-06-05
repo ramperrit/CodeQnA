@@ -18,6 +18,7 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,6 +36,7 @@ import java.util.Optional;
 public class UserService implements UserDetailsService {
     private final UserRepository userRepository;
     private final VisitorRepository visitorRepository;
+    private final PasswordEncoder passwordEncoder;
 
 
     @Transactional(readOnly = true)
@@ -51,7 +53,7 @@ public class UserService implements UserDetailsService {
     }
 
     public UserDto saveKakaoUser(String email, String nickname, UserRole user_role) {
-        Users user = new Users(null, email, nickname, null, user_role, "Y", null, "N", null);
+        Users user = new Users(null, email, nickname, null, user_role, "Y", null, "N", null,0L);
         return UserDto.from(userRepository.save(user));
 
     }
@@ -180,36 +182,15 @@ public class UserService implements UserDetailsService {
         return isEndOfDay ? LocalDateTime.of(localDate, LocalTime.MAX) : LocalDateTime.of(localDate, LocalTime.MIN);
     }
 
-    //방문자수 -----------------------------------
 
-    //ip찍기
-    public void saveIp(String ipAddr) {
-        LocalDate today = LocalDate.now();
-
-        // 날짜 리스트 조회
-        List<Visitor> visitors = visitorRepository.findByIpAddr(ipAddr);
-
-        // 최신 날짜를 찾아 비교
-        boolean isNewVisit = visitors.stream()
-                .map(Visitor::getVDate)
-                .noneMatch(today::equals);
-
-        if (isNewVisit) {
-            Visitor newVisitor = new Visitor();
-            newVisitor.setIpAddr(ipAddr);
-            newVisitor.setVDate(today);
-            visitorRepository.save(newVisitor);
-        }
-    }
-
-    //당일 방문자 수
-    public long getTodayVisitor(){
-        LocalDate today = LocalDate.now();
-        return visitorRepository.findByVDate(today).size();
-    }
     // 카카오 라디오 검색
     public List<Users> searchRadioKakao(String kakaoCondition){
         return userRepository.findByKakaoContaining(kakaoCondition);
     }
 
+    public boolean checkPassword(String email, String rawPassword) {
+
+        Users user = userRepository.findByEmail(email).orElseThrow();
+        return passwordEncoder.matches(rawPassword, user.getPassword());
+    }
 }

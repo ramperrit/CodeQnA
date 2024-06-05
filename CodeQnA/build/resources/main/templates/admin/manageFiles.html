@@ -40,6 +40,17 @@
     <script src="/handle-counter/app/js/handleCounter.js"></script>
 <!--    <meta name="_csrf" th:content="${_csrf.token}"/>-->
 <!--    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>-->
+    <style>
+        footer {
+            background-color: #8D94C7;
+            color: black;
+            height: 80px; /* 푸터 높이 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+
 
 </head>
 
@@ -74,7 +85,7 @@
                                 <p class="text-lg text-gray-900">첨부파일 개수</p>
                                 <div class="handle-counter" id="handleCounter">
                                     <button type="button" class="counter-minus btn btn-primary" style="margin-right: 2px">-</button>
-                                    <input type="text" style="margin-top: 1px" value="3" id="maxfilenum">
+                                    <input type="text" style="margin-top: 1px"  id="maxfilenum" th:value="${maxFileNum}">
                                     <button type="button" class="counter-plus btn btn-primary" style="margin-left: 2px">+</button>
                                 </div>
 
@@ -85,9 +96,9 @@
                                     <p class="text-lg text-gray-900">첨부파일 최대용량</p>
                                     <div class="d-flex align-items-center">
                                         <select name="dataTable_length" aria-controls="dataTable" class="custom-select custom-select-sm form-control form-control-sm" id="maxfilesize">
-                                            <option value="5">5</option>
-                                            <option value="10">10</option>
-                                            <option value="20">20</option>
+                                            <option value="5" th:selected="${maxFileSize == 5}">5</option>
+                                            <option value="10" th:selected="${maxFileSize == 10}">10</option>
+                                            <option value="20" th:selected="${maxFileSize == 20}">20</option>
                                         </select>
                                         <span>&nbsp;&nbsp;MB</span>
                                     </div>
@@ -98,37 +109,38 @@
                             <div class="col-6">
                                 <p class="text-lg text-gray-900">허용 확장자 관리</p>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" value="" id="Checkpng" checked>
+
+                                    <input class="form-check-input" type="checkbox" value="" id="Checkpng" th:checked="${#strings.contains(fileExt, 'png')}">
                                     <label class="form-check-label" for="Checkpng">
                                         png
                                     </label>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" value="" id="Checkjpg">
+                                    <input class="form-check-input" type="checkbox" value="" id="Checkjpg" th:checked="${#strings.contains(fileExt, 'jpg')}">
                                     <label class="form-check-label" for="Checkjpg">
                                         jpg
                                     </label>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" value="" id="Checkjpeg">
+                                    <input class="form-check-input" type="checkbox" value="" id="Checkjpeg" th:checked="${#strings.contains(fileExt, 'jpeg')}">
                                     <label class="form-check-label" for="Checkjpeg">
                                         jpeg
                                     </label>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" value="" id="Checkpdf">
+                                    <input class="form-check-input" type="checkbox" value="" id="Checkpdf" th:checked="${#strings.contains(fileExt, 'pdf')}">
                                     <label class="form-check-label" for="Checkpdf">
                                         pdf
                                     </label>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" value="" id="Checkhwp">
+                                    <input class="form-check-input" type="checkbox" value="" id="Checkhwp" th:checked="${#strings.contains(fileExt, 'hwp')}">
                                     <label class="form-check-label" for="Checkhwp">
                                         hwp
                                     </label>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" value="" id="Checkgif">
+                                    <input class="form-check-input" type="checkbox" value="" id="Checkgif" th:checked="${#strings.contains(fileExt, 'gif')}">
                                     <label class="form-check-label" for="Checkgif">
                                         gif
                                     </label>
@@ -164,6 +176,7 @@
 
 <script>
     $(function ($) {
+
         var options = {
             minimum: 1,
             maximize: 5,

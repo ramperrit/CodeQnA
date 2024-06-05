@@ -26,7 +26,7 @@ public class LogsViewDto {
     public LogsViewDto(Board board, LocalDateTime deleteTime, LocalDateTime recoveryTime) {
         this.bno = board.getBno();
         this.title = board.getTitle();
-        this.nickname = board.getNickname();
+        this.nickname = board.getUser().getNickname();
         this.regdate = board.getRegdate();
         this.hitcount = board.getHitcount();
         this.board_condition = board.getBoard_condition();

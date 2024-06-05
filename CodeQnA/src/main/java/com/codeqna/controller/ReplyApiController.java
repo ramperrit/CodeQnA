@@ -23,10 +23,10 @@ public class ReplyApiController {
 
     private final ArticleCommentService articleCommentService;
     private final UserRepository userRepository;
-    // 3. 댓글 수정
 
 
-    // 2. 댓글 생성
+
+    //  댓글 생성
     @PostMapping("/api/comments")
     public ResponseEntity<ArticleCommentRequest> create(
                                                         @RequestBody ArticleCommentRequest articleCommentRequest,
@@ -41,7 +41,7 @@ public class ReplyApiController {
 
 
 
-
+        //댓글 수정
     @PatchMapping("/api/comments/{id}")
     public ResponseEntity<ArticleCommentRequest> update(@PathVariable Long id,
                                                         @RequestBody ArticleCommentRequest articleCommentRequest,

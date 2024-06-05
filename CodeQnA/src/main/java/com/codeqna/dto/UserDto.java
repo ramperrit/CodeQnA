@@ -25,13 +25,6 @@ public class UserDto {
         private LocalDateTime regdate;
         private String user_condition;
 
-
-//    public static UserDto of( String email, String nickname, String userPassword, UserRole user_role,String kakao, LocalDateTime regdate,String user_condition) {
-//        return new UserDto(userId, email,  nickname,userPassword,user_role,kakao,regdate,user_condition);
-//    }
-//
-//
-
     public static UserDto of( String email, String nickname, String userPassword, UserRole user_role,String kakao, LocalDateTime regdate,String user_condition) {
         return new UserDto (null, email,  nickname,userPassword,user_role,kakao,regdate,user_condition);
     }
@@ -55,15 +48,6 @@ public class UserDto {
         );
     }
 
-//    public UserAccount toEntity() {
-//        return UserAccount.of(
-//                id,
-//                userPassword,
-//                email,
-//                nickname,
-//                memo
-//        );
-//    }
 
 }
 

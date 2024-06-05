@@ -29,7 +29,6 @@ public class AddBoardRequest {
                 .hashtag(hashtag)
                 .heart(heart)
                 .hitcount(hitcount)
-                .nickname(nickname)
                 .board_condition(board_condition)
                 .build();
     }

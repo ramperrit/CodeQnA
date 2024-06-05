@@ -12,9 +12,11 @@
 
         var bno = document.getElementById('boardBno').value;
         var nickname = document.getElementById("nickname").value;
+        console.log(bno);
 
         //사용자가 게시물에 좋아요를 눌렀는지
         //console.log("닉넴:" + nickname);
+        console.log(nickname);
         if (nickname) {
             fetch("/boardAPI/heart/pressHeart", {
                 method: 'POST',
@@ -23,11 +25,13 @@
                 },
                 body: JSON.stringify({
                     nickname: nickname,
-                    bno: bno,
+                    bno: bno
                 })
             })
+
                 .then(response => response.json())
                 .then(data => {
+                    console.log(data);
                     if (data) {
                         isLiked = true;  // 서버에서 true가 넘어오면 isLiked를 true로 설정
                         heartIcon.classList.remove("far");
@@ -95,6 +99,23 @@
                 if (confirm('정말 삭제하시겠습니까?')) {
                     let bno = document.getElementById('boardBno').value;
                     fetch(`/boardAPI/delete/${bno}`, {
+                        method: 'PUT'
+                    })
+                        .then(() => {
+                            alert('삭제가 완료되었습니다.');
+                            location.replace('/main');
+                        });
+                }
+            });
+        }
+
+        // 관리자가 게시물 삭제
+        const deleteAdminButton = document.getElementById('deleteAdminBoard');
+        if (deleteAdminButton) {
+            deleteAdminButton.addEventListener('click', (event) => {
+                if (confirm('정말 삭제하시겠습니까?')) {
+                    let bno = document.getElementById('boardBno').value;
+                    fetch(`/boardAPI/deleteAdmin/${bno}`, {
                         method: 'PUT'
                     })
                         .then(() => {
@@ -178,6 +199,11 @@
             display: inline-block;
             vertical-align: top;
         }
+        /*배지 */
+        .image-small {
+            width: 30px;
+            height: 30px;
+        }
 
         /*본문 사이즈*/
         #wrapper {
@@ -198,6 +224,7 @@
             align-items: center;
             justify-content: center;
         }
+
     </style>
 
 </head>
@@ -218,7 +245,13 @@
                 <h1 class="h3 mb-1 text-gray-800" th:text="${board.title}"></h1>
                 <div class="row">
                     <div class="col-lg-4">
-                        <p th:inline="text">글쓴이 | [[${board.nickname}]]</p>
+
+                        <p th:inline="text">
+                            글쓴이 | <img th:if="${board.board_adoption} >= 50" src="/img/gold.png" class="image-small" alt="Gold Badge">
+                            <img th:if="${board.board_adoption >=30 and board.board_adoption <50}" src="/img/silver.png" class="image-small" alt="Silver Badge">
+                            <img th:if="${board.board_adoption >=15 and board.board_adoption <30}" src="/img/bronze.png" class="image-small" alt="Bronze Badge"> [[${board.nickname}]]
+                        </p>
+
                     </div>
                     <div class="col-lg-4">
                         <p th:inline="text">작성일 | [[${#temporals.format(board.regdate, 'yyyy-MM-dd HH:mm')}]]</p>
@@ -263,7 +296,12 @@
                         >수정
                         </button>
                         <button id="deleteBoard" class="btn btn-danger"
-                                th:if="${#authorization.expression('hasRole(''ROLE_ADMIN'')')} or ${board.email} == ${#authentication.name}"
+                                th:if="${board.email == #authentication.name and not #authorization.expression('hasRole(''ROLE_ADMIN'')')}">
+                            삭제
+                        </button>
+
+                        <button id="deleteAdminBoard" class="btn btn-danger"
+                                th:if="${#authorization.expression('hasRole(''ROLE_ADMIN'')')}"
 
                         >삭제
                         </button>
@@ -275,31 +313,53 @@
                 <!-- 첨부 파일 목록 -->
                 <div class="row justify-content-center">
                     <!-- pdf, hwp -->
-                    <div th:each="file : ${files}" class="attachment" th:if="${#strings.endsWith(file.getOriginal_file_name(), '.pdf')}">
-                        <i th:if="${#strings.endsWith(file.getOriginal_file_name(), '.pdf')}" class="bi bi-file-earmark"></i>
-                        <a href="#" th:onclick="previewPDF('@{'/files/' + ${file.getSaved_file_name()}}')">
+                    <div th:each="file : ${files}" class="attachment" th:if="${#strings.endsWith(#strings.toLowerCase(file.getOriginal_file_name()), '.pdf')}">
+                        <i th:class="${#strings.endsWith(#strings.toLowerCase(file.getOriginal_file_name()), '.pdf')} ? 'bi bi-file-earmark'"></i>
+                        <a href="#" th:onclick="|previewPDF('@{'/image_qna/' + ${file.getSaved_file_name()}}')|">
                             <span th:text="${file.getOriginal_file_name()}"></span>
                         </a>
                     </div>
                     <!-- jpg, jpeg, gif, png -->
-                    <div th:each="file : ${files}" class="attachment" th:if="${#strings.endsWith(file.getOriginal_file_name(), '.png') or #strings.endsWith(file.getOriginal_file_name(), '.jpeg') or #strings.endsWith(file.getOriginal_file_name(), '.jpg') or #strings.endsWith(file.getOriginal_file_name(), '.gif') or #strings.endsWith(file.getOriginal_file_name(), '.hwp')}">
-                        <i th:if="${#strings.endsWith(file.getOriginal_file_name(), '.png') or #strings.endsWith(file.getOriginal_file_name(), '.jpeg') or #strings.endsWith(file.getOriginal_file_name(), '.jpg') or #strings.endsWith(file.getOriginal_file_name(), '.gif')}" class="bi bi-card-image"></i>
-                        <i th:if="${#strings.endsWith(file.getOriginal_file_name(), '.hwp')}" class="bi bi-file-earmark"></i>
+                    <div th:each="file : ${files}" class="attachment" th:if="${#strings.endsWith(#strings.toLowerCase(file.getOriginal_file_name()), '.png') or #strings.endsWith(#strings.toLowerCase(file.getOriginal_file_name()), '.jpeg') or #strings.endsWith(#strings.toLowerCase(file.getOriginal_file_name()), '.jpg') or #strings.endsWith(#strings.toLowerCase(file.getOriginal_file_name()), '.gif') or #strings.endsWith(#strings.toLowerCase(file.getOriginal_file_name()), '.hwp')}">
+                        <i th:if="${#strings.endsWith(#strings.toLowerCase(file.getOriginal_file_name()), '.png') or #strings.endsWith(#strings.toLowerCase(file.getOriginal_file_name()), '.jpeg') or #strings.endsWith(#strings.toLowerCase(file.getOriginal_file_name()), '.jpg') or #strings.endsWith(#strings.toLowerCase(file.getOriginal_file_name()), '.gif')}" class="bi bi-card-image"></i>
+                        <i th:if="${#strings.endsWith(#strings.toLowerCase(file.getOriginal_file_name()), '.hwp')}" class="bi bi-file-earmark"></i>
                         <a th:href="@{'/files/' + ${file.getSaved_file_name()}}" download th:text="${file.getOriginal_file_name()}"></a>
-                        <div th:if="${#strings.endsWith(file.getOriginal_file_name(), '.png') or #strings.endsWith(file.getOriginal_file_name(), '.jpeg') or #strings.endsWith(file.getOriginal_file_name(), '.jpg') or #strings.endsWith(file.getOriginal_file_name(), '.gif')}" class="preview">
+                        <div th:if="${#strings.endsWith(#strings.toLowerCase(file.getOriginal_file_name()), '.png') or #strings.endsWith(#strings.toLowerCase(file.getOriginal_file_name()), '.jpeg') or #strings.endsWith(#strings.toLowerCase(file.getOriginal_file_name()), '.jpg') or #strings.endsWith(#strings.toLowerCase(file.getOriginal_file_name()), '.gif')}" class="preview">
                             <img th:src="@{'/files/' + ${file.getSaved_file_name()}}" alt="Image preview" style="width: auto; height: auto; max-width: 500px; max-height: 500px;">
                         </div>
                     </div>
+                </div>
+<!--                페이지 이동 버튼 -->
+                <div class="row g-5">
+                    <nav id="pagination" aria-label="Page navigation">
+                        <ul class="pagination">
+                            <!-- Previous button -->
+                            <li class="page-item" th:class="${previousBoard} == null ? 'page-item disabled' : 'page-item'">
+                                <a class="page-link" href="#" th:href="${previousBoard} == null ? '#' : |/viewboard/${previousBoard.bno}|"
+                                   aria-label="Previous">
+                                    <span aria-hidden="true">&laquo; prev</span>
+                                </a>
+                            </li>
+                            <!-- Next button -->
+                            <li class="page-item" th:class="${nextBoard} == null ? 'page-item disabled' : 'page-item'">
+                                <a class="page-link" href="#" th:href="${nextBoard} == null ? '#' : |/viewboard/${nextBoard.bno}|"
+                                   aria-label="Next">
+                                    <span aria-hidden="true">next &raquo;</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
                 </div>
 
                 <!-- 댓글 작성 -->
                 <hr style="height: 3px; background-color: #007bff;">
                 <form class="row comment-form" >
                     <div class="input-group" style="margin-left: 16px">
+                        <input type="hidden" id="loggedIn" th:value="${loggedIn}">
                         <input type="hidden" id="new-comment-article-id" th:value="${board.bno}">
                         <div class="col-md-9 col-lg-8" style="margin-left: 30px">
 
-                            <textarea class="form-control comment-textbox" id="new-comment-body" th:name="content"
+                            <textarea class="form-control comment-textbox" id="new-comment-body" th:name="content" style="resize: none"
                                       placeholder="댓글 쓰기.." rows="3" required></textarea>
                         </div>
 
@@ -321,7 +381,12 @@
                             <input type="hidden" class="article-id" th:name="articleId" th:value="*{board.bno}">
                             <div class="row">
                                 <div class="col-md-10 col-lg-9" style="border-bottom:1px solid;">
+                                    <img th:if="${rep.adoption} >= 50" src="/img/gold.png" class="image-small" alt="Gold Badge">
+                                    <img th:if="${rep.adoption >=30 and rep.adoption <50}" src="/img/silver.png" class="image-small" alt="Silver Badge">
+                                    <img th:if="${rep.adoption >=15 and rep.adoption <30}" src="/img/bronze.png" class="image-small" alt="Bronze Badge">
                                     <strong th:text="${rep.nickname}">Uno</strong>
+
+
                                     <small>
                                         <time th:datetime="${rep.createdAt}"
                                               th:text="${#temporals.format(rep.createdAt, 'yyyy-MM-dd HH:mm:ss')}">
@@ -340,13 +405,21 @@
                                             data-bs-toggle="modal"
                                             data-bs-target="#comment-edit-modal"
                                             th:attr="data-bs-id=${rep.id},data-bs-body=${rep.content}"
-                                            th:if="${#authorization.expression('isAuthenticated()')} and ${rep.email} == ${#authentication.name} and ${rep.reply_condition=='N'}">
+                                            th:if="${#authorization.expression('isAuthenticated()')} and ${rep.email} == ${#authentication.name}
+                                            and ${rep.reply_condition=='N'} and ${rep.adopted!='Y'}">
                                         수정</button>
 
                                     <button type="button" class="btn btn-danger btn-sm comment-delete-btn"   th:attr="data-comment-id=${rep.id}"
-                                            th:if="${rep.reply_condition=='N'} and ${#authorization.expression('hasRole(''ROLE_ADMIN'')')} or ${rep.reply_condition=='N'} and ${rep.email} == ${#authentication.name}">삭제</button>
-<!--                                    <button type="button" class="btn btn-info btn-sm comment-adopt-btn"   th:attr="data-comment-id=${rep.id}"-->
-<!--                                            th:if="${rep.reply_condition=='N'} and ${#authorization.expression('isAuthenticated()')} and ${board.email} == ${#authentication.name}">채택</button>-->
+                                            th:if="${rep.reply_condition=='N'} and ${#authorization.expression('hasRole(''ROLE_ADMIN'')')} and ${rep.adopted!='Y'}
+                                             or ${rep.reply_condition=='N'} and ${rep.email} == ${#authentication.name} and ${rep.adopted!='Y'}">삭제</button>
+                                    <button type="button" class="btn btn-info btn-sm comment-adopt-btn"   th:attr="data-comment-id=${rep.id}, data-board-id=${board.bno}"
+                                            th:if="${rep.reply_condition=='N'} and ${#authorization.expression('isAuthenticated()')} and ${board.email} == ${#authentication.name}
+                                            and ${board.adopted_reply == null}"
+                                    >채택</button>
+                                    <button type="button" class="btn btn-info btn-sm"   th:attr="data-comment-id=${rep.id}, data-board-id=${board.bno}"
+                                            th:if="${rep.adopted=='Y'}"
+                                            th:disabled="${true}"
+                                    >채택완료</button>
 
                                 </div>
                             </div>
@@ -360,7 +433,11 @@
                                            th:value="*{board.bno}">
                                     <div class="row">
                                         <div class="col-md-10 col-lg-9" style="border-bottom:1px solid;">
+                                            <img th:if="${childComment.adoption} >= 50" src="/img/gold.png" class="image-small" alt="Gold Badge">
+                                            <img th:if="${childComment.adoption >=30 and childComment.adoption <50}" src="/img/silver.png" class="image-small" alt="Silver Badge">
+                                            <img th:if="${childComment.adoption >=15 and childComment.adoption <30}" src="/img/bronze.png" class="image-small" alt="Bronze Badge">
                                             <strong th:text="${childComment.nickname}">Uno</strong>
+
                                             <small>
                                                 <time th:datetime="${childComment.createdAt}"
                                                       th:text="${#temporals.format(childComment.createdAt, 'yyyy-MM-dd HH:mm:ss')}">
@@ -408,6 +485,11 @@
                         <hr style="height: 1px; background-color: #000000;">
                     </li>
                 </ul>
+                <!-- Pagination Controls -->
+                <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-center" id="pagination-controls"></ul>
+                </nav>
+
                 <!-- end reply-->
             </div>
         </div>
@@ -455,20 +537,51 @@
     document.addEventListener("DOMContentLoaded", function () {
 
         const commentCreateBtn = document.querySelector("#comment-create-btn");
+        const commentInput = document.querySelector("#new-comment-body");
+
+
+
         // 댓글 클릭 이벤트 감지
-        commentCreateBtn.addEventListener("click", function() {
-            //
-            // var token = document.querySelector('meta[name="_csrf"]').content;
-            // var header = document.querySelector('meta[name="_csrf_header"]').content;
+        commentCreateBtn.addEventListener("click", function(event) {
+            const loggedInValue = document.querySelector("#loggedIn").value;
+            console.log(loggedInValue);
+            const loggedIn = loggedInValue === "true"; // 문자열 "true"를 boolean 값으로 변환
+            if (!loggedIn) {
+                // 경고창 표시
+                if (confirm("로그인한 사용자만 댓글을 작성할 수 있습니다. 로그인하시겠습니까?")) {
+                    // 확인 버튼을 클릭한 경우 로그인 페이지로 이동
+                    window.location.href = '/users/login';
+                }
+                // 이벤트 기본 동작 막기 (로그인하지 않은 경우 글쓰기 페이지로의 기본 이동 방지)
+                event.preventDefault();
+                return;
+            }
+
+
+            const maxCommentLength = 100;
+
+            const commentContent = document.querySelector("#new-comment-body").value;
+            console.log(commentContent.length);
+
+            if (commentContent.length> maxCommentLength) {
+                // 댓글이 최대 길이를 초과하는 경우 경고 메시지 표시
+                alert("댓글은 최대 " + maxCommentLength + "자까지 입력 가능합니다.");
+                return; // 댓글이 너무 길 경우 함수 종료
+            }
             // 새 댓글 객체 생성
             const comment = {
-
                 // 새 댓글의 본문
-                content: document.querySelector("#new-comment-body").value,
+                content: commentContent,
                 // 부모 게시글의 id
                 articleId: document.querySelector("#new-comment-article-id").value
-
             };
+            if(comment.content === ""){
+                alert("댓글을 입력해주세요.");
+                return;
+            }
+
+
+
 
             // 댓글 객체 출력
             console.log(comment);
@@ -489,23 +602,65 @@
                 alert(msg);
                 // 현재 페이지 새로 고침
                 window.location.reload();
-
             });
         });
 
+        // 엔터 키 눌렀을 때 댓글 생성 버튼 클릭 이벤트 트리거
+        commentInput.addEventListener("keydown", function(event) {
+            if (event.key === "Enter" && !event.shiftKey) {
+                event.preventDefault(); // 기본 엔터 키 동작 방지 (줄바꿈 방지)
+                commentCreateBtn.click();
+            }
+        });
+
         const childCommentCreateBtns = document.querySelectorAll(".child-comment-create-btn");
+
         childCommentCreateBtns.forEach(btn => {
-            btn.addEventListener("click", function () {
+            const commentInput = btn.closest(".parent-comment").querySelector(".new-child-comment-body");
+
+
+
+            btn.addEventListener("click", function (event) {
+
+                const loggedInValue = document.querySelector("#loggedIn").value;
+                console.log(loggedInValue);
+                const loggedIn = loggedInValue === "true"; // 문자열 "true"를 boolean 값으로 변환
+                if (!loggedIn) {
+                    // 경고창 표시
+                    if (confirm("로그인한 사용자만 댓글을 작성할 수 있습니다. 로그인하시겠습니까?")) {
+                        // 확인 버튼을 클릭한 경우 로그인 페이지로 이동
+                        window.location.href = '/users/login';
+                    }
+                    // 이벤트 기본 동작 막기 (로그인하지 않은 경우 글쓰기 페이지로의 기본 이동 방지)
+                    event.preventDefault();
+                    return;
+                }
+
+
+                const maxCommentLength = 100;
+
+                const commentContent = btn.closest(".parent-comment").querySelector(".new-child-comment-body").value;
+                console.log(commentContent.length);
+
+                if (commentContent.length> maxCommentLength) {
+                    // 댓글이 최대 길이를 초과하는 경우 경고 메시지 표시
+                    alert("댓글은 최대 " + maxCommentLength + "자까지 입력 가능합니다.");
+                    return; // 댓글이 너무 길 경우 함수 종료
+                }
 
                 const comment = {
-
                     // 새 댓글의 본문
-                    content: btn.closest(".parent-comment").querySelector(".new-child-comment-body").value,
+                    content: commentInput.value,
                     // 부모 게시글의 id
                     articleId: btn.closest(".parent-comment").querySelector(".new-child-comment-article-id").value,
                     parentCommentId: btn.closest(".parent-comment").querySelector(".parent-comment-id").value,
-
                 };
+
+                if( comment.content === ""){
+                    alert("댓글을 입력해주세요.");
+                    return;
+                }
+
                 console.log(comment);
 
                 // 비동기 통신을 위한 fetch API 호출
@@ -524,9 +679,15 @@
                     alert(msg);
                     // 현재 페이지 새로 고침
                     window.location.reload();
-
                 });
+            });
 
+            // 엔터 키 눌렀을 때 자식 댓글 생성 버튼 클릭 이벤트 트리거
+            commentInput.addEventListener("keydown", function(event) {
+                if (event.key === "Enter" && !event.shiftKey) {
+                    event.preventDefault(); // 기본 엔터 키 동작 방지 (줄바꿈 방지)
+                    btn.click();
+                }
             });
         });
 
@@ -553,10 +714,26 @@
             //
             // var token = document.querySelector('meta[name="_csrf"]').content;
             // var header = document.querySelector('meta[name="_csrf_header"]').content;
+
+            const maxCommentLength = 100;
+
+            const commentContent = document.querySelector("#edit-comment-body").value;
+
+            if (commentContent.length> maxCommentLength) {
+                // 댓글이 최대 길이를 초과하는 경우 경고 메시지 표시
+                alert("댓글은 최대 " + maxCommentLength + "자까지 입력 가능합니다.");
+                return; // 댓글이 너무 길 경우 함수 종료
+            }
+            if(commentContent === ""){
+                alert("댓글을 입력해주세요.");
+                return;
+            }
+
+
             // 수정 댓글 객체 생성
             const comment = {
                 id: document.querySelector("#edit-comment-id").value,
-                content: document.querySelector("#edit-comment-body").value,
+                content: commentContent,
             };
             console.log(comment);
             // 수정 REST API 호출
@@ -578,6 +755,48 @@
             });
         });
 
+        // 채택 버튼 선택
+        const commentAdoptBtns = document.querySelectorAll(".comment-adopt-btn");
+        // 채택 버튼 이벤트 처리
+        commentAdoptBtns.forEach(btn => {
+            btn.addEventListener("click", (event) => {
+                //
+                // var token = document.querySelector('meta[name="_csrf"]').content;
+                // var header = document.querySelector('meta[name="_csrf_header"]').content;
+                if (confirm('정말 채택하시겠습니까?')) {
+                    // 이벤트 발생 요소 선택
+                    const commentAdoptBtn = event.target;
+                    // 삭제 댓글 id 가져오기
+                    const commentId = commentAdoptBtn.getAttribute("data-comment-id");
+                    const boardId = commentAdoptBtn.getAttribute("data-board-id");
+                    console.log(`채택 버튼 클릭: ${commentId}번 댓글`);
+                    // 삭제 REST API 호출
+                    const url = `/boardAPI/reply/adopt/${boardId}/${commentId}`;
+                    fetch(url, {
+                        method: "GET"
+                        // ,headers: {
+                        //
+                        //     'X-CSRF-Token': token,
+                        //     'header': header
+                        // }
+
+                    }).then(response => {
+
+                        if (!response.ok) {
+                            alert("채택 실패..!");
+                            return;
+                        }
+                        // 삭제 성공 시 메시지 창 띄우기
+                        const msg = `${commentId}번 댓글을 채택했습니다.`;
+                        alert(msg);
+                        // 현재 페이지 새로 고침
+                        window.location.reload();
+                    });
+                }
+            });
+        });
+
+
         // 삭제 버튼 선택
         const commentDeleteBtns = document.querySelectorAll(".comment-delete-btn");
         // 삭제 버튼 이벤트 처리
@@ -586,38 +805,41 @@
                 //
                 // var token = document.querySelector('meta[name="_csrf"]').content;
                 // var header = document.querySelector('meta[name="_csrf_header"]').content;
+                if (confirm('정말 삭제하시겠습니까?')) {
+                    // 이벤트 발생 요소 선택
+                    const commentDeleteBtn = event.target;
+                    // 삭제 댓글 id 가져오기
+                    const commentId = commentDeleteBtn.getAttribute("data-comment-id");
+                    console.log(`삭제 버튼 클릭: ${commentId}번 댓글`);
+                    // 삭제 REST API 호출
+                    const url = `/api/comments/${commentId}`;
+                    fetch(url, {
+                        method: "DELETE"
+                        // ,headers: {
+                        //
+                        //     'X-CSRF-Token': token,
+                        //     'header': header
+                        // }
 
-                // 이벤트 발생 요소 선택
-                const commentDeleteBtn = event.target;
-                // 삭제 댓글 id 가져오기
-                const commentId = commentDeleteBtn.getAttribute("data-comment-id");
-                console.log(`삭제 버튼 클릭: ${commentId}번 댓글`);
-                // 삭제 REST API 호출
-                const url = `/api/comments/${commentId}`;
-                fetch(url, {
-                    method: "DELETE"
-                    // ,headers: {
-                    //
-                    //     'X-CSRF-Token': token,
-                    //     'header': header
-                    // }
-
-                }).then(response => {
-                    // 댓글 삭제 실패 처리
-                    if (!response.ok) {
-                        alert("댓글 삭제 실패..!");
-                        return;
-                    }
-                    // 삭제 성공 시 메시지 창 띄우기
-                    const msg = `${commentId}번 댓글을 삭제했습니다.`;
-                    alert(msg);
-                    // 현재 페이지 새로 고침
-                    window.location.reload();
-                });
+                    }).then(response => {
+                        // 댓글 삭제 실패 처리
+                        if (!response.ok) {
+                            alert("댓글 삭제 실패..!");
+                            return;
+                        }
+                        // 삭제 성공 시 메시지 창 띄우기
+                        const msg = `${commentId}번 댓글을 삭제했습니다.`;
+                        alert(msg);
+                        // 현재 페이지 새로 고침
+                        window.location.reload();
+                    });
+                }
             });
         });
     });
 </script>
+
+
 <!-- 마우스를 올리면 미리보기 표시하는 스크립트 -->
 <script>
     document.addEventListener("DOMContentLoaded", function() {
@@ -628,52 +850,39 @@
             const link = attachment.querySelector('a');
             const preview = attachment.querySelector('.preview');
 
-            link.addEventListener('mouseover', () => {
+            // 미리보기를 표시합니다.
+            const showPreview = () => {
                 if (preview) {
                     preview.style.display = 'block';
                 }
-            });
+            };
 
-            link.addEventListener('mouseout', () => {
+            // 미리보기를 숨깁니다.
+            const hidePreview = () => {
                 if (preview) {
                     preview.style.display = 'none';
                 }
-            });
+            };
+
+            link.addEventListener('mouseover', showPreview);
+
+            link.addEventListener('mouseout', hidePreview);
+
+            // 미리보기 이미지에 마우스를 올렸을 때 호버 효과를 유지합니다.
+            if (preview) {
+                preview.addEventListener('mouseover', showPreview);
+
+                preview.addEventListener('mouseout', hidePreview);
+            }
         });
     });
 </script>
 
-<!-- pdf 스크립트 -->
+<!-- pdf 미리보기창 띄우기 스크립트 -->
 <script>
-    // 클릭 이벤트에 바인딩할 함수
     function previewPDF(url) {
-        // 새 창 열기
-        var newWindow = window.open("", "_blank");
-
-        // PDF.js를 사용하여 PDF 로드
-        pdfjsLib.getDocument(url).promise.then(function(pdf) {
-            // 첫 번째 페이지를 가져와서 렌더링
-            pdf.getPage(1).then(function(page) {
-                var scale = 1.5; // 확대 배율 조정 가능
-                var viewport = page.getViewport({ scale: scale });
-
-                // 캔버스 요소 생성
-                var canvas = document.createElement("canvas");
-                var context = canvas.getContext("2d");
-                canvas.height = viewport.height;
-                canvas.width = viewport.width;
-
-                // 캔버스에 PDF 페이지 렌더링
-                var renderContext = {
-                    canvasContext: context,
-                    viewport: viewport
-                };
-                page.render(renderContext).promise.then(function() {
-                    // 캔버스를 새 창에 추가
-                    newWindow.document.body.appendChild(canvas);
-                });
-            });
-        });
+        console.log("pdf 미리보기 스크립트 발동");
+        window.open(url, '_blank');
     }
 </script>
 

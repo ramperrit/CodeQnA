@@ -10,6 +10,6 @@ public class WebMvcConfig implements WebMvcConfigurer {
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry.addResourceHandler("/image_qna/**")
-                .addResourceLocations("file:///C:/Users/codepc/Desktop/image_qna/");
+                .addResourceLocations("file:////home/codeqna/image_qna/");
     }
 }

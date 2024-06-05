@@ -6,18 +6,13 @@ import com.codeqna.dto.UserDto;
 import com.codeqna.dto.UserFormDto;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.DynamicInsert;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collection;
 
 @Entity
 @Getter @Setter
@@ -64,7 +59,11 @@ public class Users{
     @Column(name = "expiredDate")
     private LocalDateTime expiredDate;
 
-//    회원가입
+    @Column
+    private Long adoption;
+
+
+    //    회원가입
     public static Users createUsers(UserFormDto userFormDto, PasswordEncoder passwordEncoder){
         return Users.builder()
                 .nickname(userFormDto.getNickname())
@@ -73,6 +72,7 @@ public class Users{
                 .user_role(UserRole.USER)
                 .user_condition(userFormDto.getUser_condition())
                 .kakao(userFormDto.getKakao())
+                .adoption(0L)
                 .build();
     }
 

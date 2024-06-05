@@ -9,17 +9,12 @@ import com.codeqna.dto.request.ArticleCommentRequest;
 import com.codeqna.dto.response.ArticleCommentResponse;
 import com.codeqna.dto.response.ArticleResponse;
 import com.codeqna.dto.security.BoardPrincipal;
-import com.codeqna.entity.Board;
-import com.codeqna.entity.Reply;
-import com.codeqna.entity.Uploadfile;
-import com.codeqna.entity.Users;
+import com.codeqna.entity.*;
 import com.codeqna.repository.BoardRepository;
+import com.codeqna.repository.FileconfigRepository;
 import com.codeqna.repository.UploadfileRepository;
 import com.codeqna.repository.UserRepository;
-import com.codeqna.service.ArticleCommentService;
-import com.codeqna.service.BoardService;
-import com.codeqna.service.ReplyService;
-import com.codeqna.service.UserService;
+import com.codeqna.service.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
@@ -27,13 +22,11 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -48,43 +41,40 @@ public class ViewController {
     private final ArticleCommentService articleCommentService;
     private final UserService userService;
     private final UploadfileRepository uploadfileRepository;
+    private final VisitorService visitorService;
+    private final FileconfigRepository fileconfigRepository;
 
     @Value("${upload.path}")
     private String uploadPath;
 
     @GetMapping("/main")
-    public String boardList(Model model) {
+    public String boardList(Model model,@AuthenticationPrincipal BoardPrincipal boardPrincipal) {
 
         //방문자수
-        long visitorCnt = userService.getTodayVisitor();
+        long visitorCnt = visitorService.getTodayVisitor();
         model.addAttribute("visitorCnt", visitorCnt);
         // 게시글 목록을 가져와서 모델에 추가
         List<Board> boards = boardService.getAllBoards();
         model.addAttribute("boards", boards);
+
+
+        if(boardPrincipal != null) {
+            String email = boardPrincipal.getUsername();
+            Users users = userRepository.findByEmail(email).orElseThrow();
+            model.addAttribute("nickname", users.getNickname());
+            model.addAttribute("loggedIn", "true");
+
+        }else{
+            model.addAttribute("loggedIn", "false");
+        }
+
         return "boardlist"; // HTML 템플릿 이름 리턴
-    }
-
-    @GetMapping("/Loginmain")
-    public String Loginmainpage(Model model, @AuthenticationPrincipal BoardPrincipal boardPrincipal ){
-        //방문자수
-        long visitorCnt = userService.getTodayVisitor();
-        model.addAttribute("visitorCnt", visitorCnt);
-
-        List<Board> boards = boardService.getAllBoards();
-        model.addAttribute("boards", boards);
-
-
-        String email = boardPrincipal.getUsername();
-        Users users = userRepository.findByEmail(email).orElseThrow();
-
-        model.addAttribute("nickname", users.getNickname());
-        return "boardlist";
     }
 
     @GetMapping("/admin/deleted")
     public String deletedBoard(Model model){
         //방문자수
-        long visitorCnt = userService.getTodayVisitor();
+        long visitorCnt = visitorService.getTodayVisitor();
         model.addAttribute("visitorCnt", visitorCnt);
 
         List<LogsViewDto> boards = boardService.getLogWithBoard();
@@ -97,7 +87,7 @@ public class ViewController {
         List<Board> boards = boardService.getAllBoards();
         model.addAttribute("boards", boards);
         //방문자수
-        long visitorCnt = userService.getTodayVisitor();
+        long visitorCnt = visitorService.getTodayVisitor();
         model.addAttribute("visitorCnt", visitorCnt);
         return "admin/manageBoards";
     }
@@ -106,7 +96,7 @@ public class ViewController {
     public String manageComments(Model model){
 
         //방문자수
-        long visitorCnt = userService.getTodayVisitor();
+        long visitorCnt = visitorService.getTodayVisitor();
         model.addAttribute("visitorCnt", visitorCnt);
         List<RepliesViewDto> replies = articleCommentService.getReplies();
         model.addAttribute("replies", replies);
@@ -115,7 +105,7 @@ public class ViewController {
     @GetMapping("/admin/users")
     public String manageUsers(Model model){
         //방문자수
-        long visitorCnt = userService.getTodayVisitor();
+        long visitorCnt = visitorService.getTodayVisitor();
         model.addAttribute("visitorCnt", visitorCnt);
         List<Users> users = userService.getAllUsers();
         model.addAttribute("users", users);
@@ -125,8 +115,14 @@ public class ViewController {
     public String manageFiles(Model model){
 
         //방문자수
-        long visitorCnt = userService.getTodayVisitor();
+        long visitorCnt = visitorService.getTodayVisitor();
         model.addAttribute("visitorCnt", visitorCnt);
+
+        Fileconfig fileconfig = fileconfigRepository.findById(1).orElse(new Fileconfig());
+
+        model.addAttribute("maxFileNum", fileconfig.getMax_File_Num());
+        model.addAttribute("maxFileSize",fileconfig.getMax_file_Size());
+        model.addAttribute("fileExt",fileconfig.getFile_ext());
         return "admin/manageFiles";
     }
 
@@ -134,7 +130,7 @@ public class ViewController {
     public String visitorDashboard(Model model){
 
         //방문자수
-        long visitorCnt = userService.getTodayVisitor();
+        long visitorCnt = visitorService.getTodayVisitor();
         model.addAttribute("visitorCnt", visitorCnt);
         return "admin/visitorDashboard";
     }
@@ -142,7 +138,7 @@ public class ViewController {
     @GetMapping("/newboard")
     public String newboard(Model model, @AuthenticationPrincipal BoardPrincipal boardPrincipal ){
         //방문자수
-        long visitorCnt = userService.getTodayVisitor();
+        long visitorCnt = visitorService.getTodayVisitor();
         model.addAttribute("visitorCnt", visitorCnt);
 
         String email = boardPrincipal.getUsername();
@@ -160,7 +156,7 @@ public class ViewController {
     ,  @AuthenticationPrincipal BoardPrincipal boardPrincipal){
 
         //방문자수
-        long visitorCnt = userService.getTodayVisitor();
+        long visitorCnt = visitorService.getTodayVisitor();
         model.addAttribute("visitorCnt", visitorCnt);
 
         String email = boardPrincipal.getUsername();
@@ -176,10 +172,11 @@ public class ViewController {
 
     @GetMapping("/viewboard/{bno}")
     public String viewBoard(@PathVariable Long bno, Model model
-            , @AuthenticationPrincipal BoardPrincipal boardPrincipal) {
+            , @AuthenticationPrincipal BoardPrincipal boardPrincipal
+                          ) {
 
         //방문자수
-        long visitorCnt = userService.getTodayVisitor();
+        long visitorCnt = visitorService.getTodayVisitor();
         model.addAttribute("visitorCnt", visitorCnt);
 
         Board board = boardService.findByBno(bno);
@@ -189,6 +186,7 @@ public class ViewController {
         }
 
         ArticleResponse articleResponse = ArticleResponse.from(board);
+
         Set<ArticleCommentResponse> reply = articleCommentService.searchArticleComments(bno);
 
 
@@ -207,13 +205,14 @@ public class ViewController {
         model.addAttribute("hashtags", hashtagList);
 
         //로그인된 사용자의 nickname을 넘김, 없으면 오류, 빈 값을 넘김
-
         if(boardPrincipal!=null) {
             String email = boardPrincipal.getUsername();
             Users users = userRepository.findByEmail(email).orElseThrow();
             model.addAttribute("nickname", users.getNickname());
+            model.addAttribute("loggedIn", "true");
         } else{
             model.addAttribute("nickname", "");
+            model.addAttribute("loggedIn", "false");
         }
         // 파일정보 가져오는 부분
         List<Uploadfile> uploadfiles = uploadfileRepository.findByBoard_Bno(bno);
@@ -224,20 +223,27 @@ public class ViewController {
 
         model.addAttribute("board", articleResponse);
 
+
         model.addAttribute("reply", reply);
+
+        long totalCount = boardService.getTotalCount();
+        model.addAttribute("totalCount", totalCount);
+        model.addAttribute("boardBno", bno);
+
+        Optional<Board> previousBoard = boardService.getPreviousActiveBoard(bno);
+        Optional<Board> nextBoard = boardService.getNextActiveBoard(bno);
+
+        model.addAttribute("previousBoard", previousBoard.orElse(null));
+        model.addAttribute("nextBoard", nextBoard.orElse(null));
         return "viewBoard";
     }
-
-    @PostMapping("/comments/new")
-    public String postNewArticleComment(
-
-            ArticleCommentRequest articleCommentRequest,
-            @AuthenticationPrincipal BoardPrincipal principal
-    ) {
-        String email  = principal.getName();
-        Users user = userRepository.findByEmail(email).orElseThrow();
-        articleCommentService.saveArticleComment(articleCommentRequest,email);
-
-        return "redirect:/viewboard/" + articleCommentRequest.getArticleId();
+    @GetMapping("/comments")
+    @ResponseBody
+    public Set<ArticleCommentResponse> getComments(@RequestParam("articleId") Long articleId) {
+        return articleCommentService.searchArticleComments(articleId);
     }
+
+
+
+
 }

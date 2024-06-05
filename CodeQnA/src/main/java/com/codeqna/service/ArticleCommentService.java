@@ -57,8 +57,8 @@ public class ArticleCommentService {
                 .filter(comment -> !comment.hasParentComment())
                 .collect(Collectors.toCollection(() ->
                         new TreeSet<>(Comparator
-                                .comparing(ArticleCommentResponse::getCreatedAt)
-                                .reversed()
+                                .comparing(ArticleCommentResponse::getAdopted).reversed()
+                                .thenComparing(ArticleCommentResponse::getCreatedAt)
                                 .thenComparingLong(ArticleCommentResponse::getId)
                         )
                 ));
@@ -188,6 +188,11 @@ public class ArticleCommentService {
             RepliesViews.add(repliesViewDto);
         }
         return RepliesViews;
+    }
+
+    // 댓글관리 라디오 검색
+    public List<RepliesViewDto> searchRadioReplyBoards(String replyCondition){
+        return replyRepository.findByReplyconditionContaining(replyCondition);
     }
 
 

@@ -4,30 +4,40 @@ import com.codeqna.dto.*;
 import com.codeqna.dto.security.BoardPrincipal;
 import com.codeqna.entity.Board;
 import com.codeqna.entity.Heart;
+import com.codeqna.entity.Uploadfile;
 import com.codeqna.entity.Users;
+import com.codeqna.repository.UploadfileRepository;
 import com.codeqna.service.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
+import org.springframework.security.core.GrantedAuthority;
 
 @RestController
 @RequestMapping("/boardAPI")
 @RequiredArgsConstructor
 public class BoardApiController {
 
+
     private final BoardService boardService;
     private final ReplyService replyService;
     private final HeartService heartService;
     private final UserService userService;
     private final ArticleCommentService articleCommentService;
+
     // 게시물 등록
     @PostMapping("/register")
     public ResponseEntity<Board> addBoard(@RequestBody AddBoardRequest request,
-                                          @AuthenticationPrincipal BoardPrincipal boardPrincipal    ){
+                                          @AuthenticationPrincipal BoardPrincipal boardPrincipal){
 
         String email = boardPrincipal.getUsername();
         Board savedBoard = boardService.save(request,email);
@@ -44,8 +54,9 @@ public class BoardApiController {
 
     // 게시물 수정
     @PostMapping("/modify")
-    public ResponseEntity<Board> modifyBoard(@RequestBody ModifyBoardRequest request){
-        Board modifiedBoard = boardService.modify(request);
+    public ResponseEntity<Board> modifyBoard(@RequestBody ModifyBoardRequest request,
+                                             @AuthenticationPrincipal BoardPrincipal boardPrincipal){
+        Board modifiedBoard = boardService.modify(request,boardPrincipal.getUsername());
 
         return ResponseEntity.status(HttpStatus.CREATED).body(modifiedBoard);
     }
@@ -53,17 +64,40 @@ public class BoardApiController {
 
     //게시물 삭제
     @PutMapping("/delete/{bno}")
-    public ResponseEntity<Void> delete(@PathVariable Long bno) {
-        boardService.deleteBoard(bno);
-        System.out.println("요까지1");
+    public ResponseEntity<Void> delete(@PathVariable Long bno,
+                                       @AuthenticationPrincipal BoardPrincipal boardPrincipal) {
+        boardService.deleteBoard(bno,boardPrincipal.getUsername());
+
 
         return ResponseEntity.ok().build();
     }
 
+    // 관리자가 게시물 삭제
+    @PutMapping("/deleteAdmin/{bno}")
+    public ResponseEntity<Void> deleteAdmin(@PathVariable Long bno, @AuthenticationPrincipal BoardPrincipal boardPrincipal) {
+        // authorities 컬렉션에서 권한 이름을 확인하여 USER_ADMIN이 있는지 확인
+        boolean isAdmin = boardPrincipal.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(authority -> authority.equals("ROLE_ADMIN"));
+
+        System.out.println(isAdmin);
+
+        if(isAdmin) {
+            boardService.deleteAdminBoard(bno);
+
+            return ResponseEntity.ok().build();
+        }else{
+            //권한 없음
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+    }
+
     //좋아요를 눌렀을 경우
     @PutMapping("/heart/like")
-    public ResponseEntity<Void> increaseHeart(@RequestBody HeartDto heartDto) {
-        heartService.increaseHeart(heartDto);
+    public ResponseEntity<Void> increaseHeart(@RequestBody HeartDto heartDto,
+                                              @AuthenticationPrincipal BoardPrincipal boardPrincipal ) {
+        heartService.increaseHeart(heartDto,boardPrincipal.getUsername());
         //System.out.println("닉네임 오냐? : " + heartDto.getNickname());
 
         return ResponseEntity.ok().build();
@@ -72,25 +106,23 @@ public class BoardApiController {
 
     //좋아요를 취소했을 경우
     @PutMapping("/heart/unlike")
-    public ResponseEntity<Void> decreaseHeart(@RequestBody HeartDto heartDto) {
-        heartService.decreaseHeart(heartDto);
+    public ResponseEntity<Void> decreaseHeart(@RequestBody HeartDto heartDto,
+                                              @AuthenticationPrincipal BoardPrincipal boardPrincipal) {
+        heartService.decreaseHeart(heartDto,boardPrincipal.getUsername());
         return ResponseEntity.ok().build();
     }
 
     //로그인 후 상세 페이지에 들어갔을 때 그 사용자가 그 게시물에 좋아요를 눌렀는지 여부 반환
     @PostMapping("/heart/pressHeart")
-    public @ResponseBody Heart isHeart(@RequestBody HeartDto heartDto) {
-        System.out.println("이게 실행되나?");
-        System.out.println("이게 json : " + heartService.isHeart(heartDto));
-        return heartService.isHeart(heartDto);
+    public @ResponseBody Heart isHeart(@RequestBody HeartDto heartDto,
+                                       @AuthenticationPrincipal BoardPrincipal boardPrincipal) {
+
+
+
+        return heartService.isHeart(heartDto, boardPrincipal.getUsername());
     }
 
-    //댓글 등록
-    @PostMapping("/comment/add")
-    public ResponseEntity<ParentReplyDto> addComment(@RequestBody ParentReplyDto parentReplyDto) {
-        replyService.addComment(parentReplyDto);
-        return ResponseEntity.ok().build();
-    }
+
     //회원관리페이지
     //검색
     @GetMapping("/searchUsers")
@@ -115,11 +147,15 @@ public class BoardApiController {
     public List<RepliesViewDto> searchReplies(@RequestParam("condition") String condition,
                                    @RequestParam("keyword") String keyword,
                                    @RequestParam("start") String start,
-                                   @RequestParam("end") String end) {
+                                   @RequestParam("end") String end,
+                                              @RequestParam(value = "deleteCondition", required = false, defaultValue = "defaultCondition") String deleteCondition) {
 
         if(condition.equals("regdate")||condition.equals("deletetime")||condition.equals("recovertime")){
             return articleCommentService.searchDateReplies(condition, start, end);
-        }else {
+        }else if (condition.equals("replycondition")) {
+            return articleCommentService.searchRadioReplyBoards(deleteCondition);
+        }
+        else {
             return articleCommentService.searchStringReplies(condition, keyword);
         }
 
@@ -149,27 +185,28 @@ public class BoardApiController {
 
     // 삭제게시물 복원 요청
     @PostMapping("/recoverBoard")
-    public ResponseEntity<String> recoverBoard(@RequestBody List<Long> bnos) {
+    public ResponseEntity<String> recoverBoard(@RequestBody List<Long> bnos,
+                                               @AuthenticationPrincipal BoardPrincipal boardPrincipal) {
         if (bnos == null || bnos.isEmpty()) {
             return ResponseEntity.badRequest().body("No boards selected for recovery");
         }
-        try {
-            boardService.recoverBoards(bnos);
-            return ResponseEntity.ok("Boards recovered successfully");
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error recovering boards");
+        boolean isAdmin = boardPrincipal.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(authority -> authority.equals("ROLE_ADMIN"));
+        if(isAdmin) {
+            try {
+                boardService.recoverBoards(bnos);
+                return ResponseEntity.ok("Boards recovered successfully");
+            } catch (Exception e) {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error recovering boards");
+            }
+        }else{
+            //권한 없음
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
+
+
     }
-//    //댓글 채택
-//    @GetMapping("/reply/adopt/{bno}")
-//    public ResponseEntity<Void> adoptReply(@PathVariable Long bno,
-//                                           @RequestBody Long rno){
-//        boardService.adoptReply(bno,rno);
-//
-//
-//        return ResponseEntity.ok().build();
-//
-//    }
 
     // 삭제게시물 검색
     @GetMapping("/searchManageBoardTable")
@@ -191,31 +228,68 @@ public class BoardApiController {
 
     // 삭제게시물 복원 요청
     @PostMapping("/recoverDeleteBoard")
-    public ResponseEntity<String> recoverDeleteBoard(@RequestBody List<Long> bnos) {
+    public ResponseEntity<String> recoverDeleteBoard(@RequestBody List<Long> bnos,
+                                                     @AuthenticationPrincipal BoardPrincipal boardPrincipal) {
         if (bnos == null || bnos.isEmpty()) {
             return ResponseEntity.badRequest().body("No boards selected for recovery");
         }
-        try {
-            boardService.recoverDeleteBoards(bnos);
-            return ResponseEntity.ok("Boards recovered successfully");
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error recovering boards");
+
+        boolean isAdmin = boardPrincipal.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(authority -> authority.equals("ROLE_ADMIN"));
+        if(isAdmin) {
+            try {
+                boardService.recoverDeleteBoards(bnos);
+                return ResponseEntity.ok("Boards recovered successfully");
+            } catch (Exception e) {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error recovering boards");
+            }
+        }else{
+            //권한 없음
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
+
     }
 
     // 관리자가 게시물 삭제 요청
     @PostMapping("/deleteAdminBoard")
-    public ResponseEntity<String> deleteAdminBoard(@RequestBody List<Long> bnos) {
+    public ResponseEntity<String> deleteAdminBoard(@RequestBody List<Long> bnos, @AuthenticationPrincipal BoardPrincipal boardPrincipal) {
         if (bnos == null || bnos.isEmpty()) {
             return ResponseEntity.badRequest().body("No boards selected for recovery");
         }
-        try {
-            boardService.checkedDeleteBoardAdmin(bnos);
-            return ResponseEntity.ok("Boards deleted successfully");
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error deleting boards");
+
+        boolean isAdmin = boardPrincipal.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(authority -> authority.equals("ROLE_ADMIN"));
+
+        System.out.println(isAdmin);
+
+        if(isAdmin) {
+            try {
+                boardService.checkedDeleteBoardAdmin(bnos);
+                return ResponseEntity.ok("Boards deleted successfully");
+            } catch (Exception e) {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error deleting boards");
+            }
+        }else{
+            //권한 없음
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
+
     }
+    //댓글 채택
+    @GetMapping("/reply/adopt/{bno}/{rno}")
+    public ResponseEntity<Void> adoptReply(@PathVariable Long bno,
+                                           @PathVariable Long rno,
+                                           @AuthenticationPrincipal BoardPrincipal boardPrincipal){
+        boardService.adoptReply(bno,rno,boardPrincipal.getUsername());
+
+
+        return ResponseEntity.ok().build();
+
+    }
+
+
 
 
 

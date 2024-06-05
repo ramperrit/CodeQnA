@@ -43,6 +43,16 @@
     <!-- 엑셀 다운 SheetJS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.3/xlsx.full.min.js"></script>
 
+    <style>
+        footer {
+            background-color: #8D94C7;
+            color: black;
+            height: 80px; /* 푸터 높이 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
 
 
 </head>
@@ -131,7 +141,7 @@
                                     <td><input type="checkbox"/></td>
                                     <td th:text="${board.bno}"></td>
                                     <td th:text="${board.title}"></td>
-                                    <td th:text="${board.nickname}"></td>
+                                    <td th:text="${board.getUser().getNickname()}"></td>
                                     <td th:text="${#temporals.format(board.regdate, 'yyyy-MM-dd HH:mm:ss')}"></td>
                                     <td th:text="${board.hitcount}"></td>
                                     <td th:text="${board.heart}"></td>
@@ -294,7 +304,7 @@
                     $('<td>').html('<input type="checkbox"/>').appendTo(newRow);
                     $('<td>').text(board.bno).appendTo(newRow);
                     $('<td>').text(board.title).appendTo(newRow);
-                    $('<td>').text(board.nickname).appendTo(newRow);
+                    $('<td>').text(board.user.nickname).appendTo(newRow);
                     $('<td>').text(formatDate(new Date(board.regdate))).appendTo(newRow);
                     $('<td>').text(board.hitcount).appendTo(newRow);
                     $('<td>').text(board.heart).appendTo(newRow);

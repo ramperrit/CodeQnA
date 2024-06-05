@@ -1,6 +1,7 @@
 package com.codeqna.repository;
 
 import com.codeqna.entity.Board;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -19,13 +20,14 @@ public interface BoardRepository extends JpaRepository<Board, Long>, BoardReposi
     List<Board> findByTitleContaining(@Param("title") String keyword, @Param("boardCondition") String boardCondition);
     @Query("SELECT b FROM Board b WHERE b.content LIKE %:content% AND b.board_condition = :boardCondition")
     List<Board> findByContentContaining(@Param("content") String keyword, @Param("boardCondition") String boardCondition);
-    @Query("SELECT b FROM Board b WHERE b.nickname LIKE %:nickname% AND b.board_condition = :boardCondition")
+
+    @Query("SELECT b FROM Board b WHERE b.user.nickname LIKE %:nickname% AND b.board_condition = :boardCondition")
     List<Board> findByNicknameContaining(@Param("nickname") String keyword, @Param("boardCondition") String boardCondition);
 
     @Query("SELECT b FROM Board b WHERE b.title LIKE %:title%")
     List<Board> findByBoardTitleContaining(@Param("title") String keyword);
 
-    @Query("SELECT b FROM Board b WHERE b.nickname LIKE %:nickname%")
+    @Query("SELECT b FROM Board b WHERE b.user.nickname LIKE %:nickname%")
     List<Board> findByBoardNicknameContaining(@Param("nickname") String keyword);
 
     @Query("SELECT b FROM Board b WHERE b.regdate >= :start")
@@ -41,4 +43,13 @@ public interface BoardRepository extends JpaRepository<Board, Long>, BoardReposi
     @Modifying
     @Query("update Board set hitcount = hitcount + 1 where bno = :bno")
     void incrementHitCount(@Param("bno") Long bno);
+
+    @Query("SELECT b FROM Board b WHERE b.board_condition = 'N' AND b.bno < :bno ORDER BY b.bno DESC")
+    List<Board> findPreviousActiveBoard(@Param("bno") Long bno, Pageable pageable);
+
+    @Query("SELECT b FROM Board b WHERE b.board_condition = 'N' AND b.bno > :bno ORDER BY b.bno ASC")
+    List<Board> findNextActiveBoard(@Param("bno") Long bno, Pageable pageable);
+
+    @Query("SELECT count(*) FROM Board b where b.board_condition = :boardCondition")
+    long countByBoard_condition(String boardCondition);
 }

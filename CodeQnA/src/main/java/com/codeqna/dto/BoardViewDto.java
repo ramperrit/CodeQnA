@@ -23,7 +23,7 @@ public class BoardViewDto {
         this.bno =board.getBno();
         this.title = board.getTitle();
         this.content = board.getContent();
-        this.nickname = board.getNickname();
+        this.nickname = board.getUser().getNickname();
         this.heart = board.getHeart();
         this.hit_count = board.getHitcount();
         this.hashtag = board.getHashtag();

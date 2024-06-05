@@ -19,9 +19,11 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.net.URI;
 import java.net.URL;
+import java.security.Principal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,25 +40,25 @@ public class UserController {
     @GetMapping("/signup")
     public String signup(Model model){
         model.addAttribute("userFormDto", new UserFormDto());
-        return "/user/signup";
+        return "user/signup";
     }
 
     @GetMapping("/login")
     public String login(){
-        return "/user/login";
+        return "user/login";
     }
 
     @PostMapping("/signup")
     public String userForm(@Valid UserFormDto userFormDto, BindingResult bindingResult, Model model){
         if (bindingResult.hasErrors()){
-            return "/user/signup";
+            return "user/signup";
         }
         try {
             Users users = Users.createUsers(userFormDto, passwordEncoder);
             userService.saveUser(users);
         }catch (IllegalStateException e){
             model.addAttribute("errorMessage", e.getMessage());
-            return "/user/signup";
+            return "user/signup";
         }
         return "redirect:/users/login";
     }
@@ -64,12 +66,12 @@ public class UserController {
     @GetMapping("/login/error")
     public String loginError(Model model){
         model.addAttribute("loginErrorMsg", "이메일 또는 비밀번호를 확인해주세요");
-        return "/user/login";
+        return "user/login";
     }
     @GetMapping("/login/expired")
     public String loginExpired(Model model){
         model.addAttribute("loginErrorMsg", "탈퇴된 계정입니다.");
-        return "/user/login";
+        return "user/login";
     }
 
     @GetMapping("/mypage")
@@ -109,7 +111,7 @@ public class UserController {
 
         boolean updateSuccess = userService.updateNickname(email, nickname);
         HttpHeaders headers = new HttpHeaders();
-        headers.setLocation(URI.create("/Loginmain"));
+        headers.setLocation(URI.create("/main"));
         if (updateSuccess){
             return new ResponseEntity<>(headers, HttpStatus.MOVED_PERMANENTLY);
         }else {
@@ -119,22 +121,23 @@ public class UserController {
 
     @GetMapping("/currentNickname")
     public ResponseEntity<String> getCurrentNickname(@AuthenticationPrincipal BoardPrincipal boardPrincipal) {
-//        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-//        String email = auth.getName();
+
 
         String email = boardPrincipal.getUsername();
         Users users = userRepository.findByEmail(email).orElseThrow();
        String nickname = users.getNickname();
-     //   String nickname = userService.getNicknameByEmail(email);
         return ResponseEntity.ok(nickname);
     }
 
     //    탈퇴처리
     @PostMapping("/deleteUser")
-    public String deleteUser(@AuthenticationPrincipal BoardPrincipal boardPrincipal){
+    public String deleteUser(
+            @AuthenticationPrincipal BoardPrincipal boardPrincipal){
         String email = boardPrincipal.getUsername();
         userService.deleteUser(email);
         return "redirect:/users/logout";
+
+
     }
 
     //다중 탈퇴 처리

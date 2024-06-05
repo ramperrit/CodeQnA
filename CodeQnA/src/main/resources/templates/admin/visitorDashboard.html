@@ -98,10 +98,10 @@
             <!-- Begin Page Content -->
             <div class="container-fluid">
 
-                <!-- DataTales Example -->
+                <!-- 방문자 대시보드 -->
                 <div class="card shadow mb-4">
                     <div class="card-header py-3">
-                        <h6 class="m-0 font-weight-bold text-primary">방문자</h6>
+                        <h3 class="m-0 font-weight-bold text-primary">방문자 차트</h3>
                     </div>
 
                     <div class="card-body">
@@ -124,45 +124,55 @@
                             <h1 class="h3 mb-2 text-gray-800" id="chart-title">일간 조회</h1>
                         </div>
                     </div>
-
                     <div>
-                        <ul class="mr-auto form-inline">
-                            <div style="display: flex; gap: 50px; justify-content: center; align-items: center">
-                                <div class="mb-4" style="flex: 1; height: 400px; width: 800px; border: solid 1px black">
+                        <div class="mr-auto form-inline" style="justify-content: center;">
+                            <div style="display: flex; justify-content: center; align-items: center; padding: 5px">
+                                <div class="mb-4" style="flex: 1; height: 400px; width: 800px;">
                                     <canvas id="myChart" style="display: block; box-sizing: border-box; height: 400px; width: 100%;" width="800" height="400"></canvas>
                                 </div>
-                                <div class="table-container">
-                                    <table>
-                                        <thead>
-                                        <tr>
-                                            <td>날짜</td>
-                                            <td>방문자 수</td>
-                                        </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td>2024-05-24</td>
-                                                <td>8</td>
-                                            </tr>
-                                            <tr>
-                                                <td>2024-05-24</td>
-                                                <td>85</td>
-                                            </tr>
-                                            <tr>
-                                                <td>2024-05-24</td>
-                                                <td>853</td>
-                                            </tr>
-                                            <tr>
-                                                <td>2024-05-24</td>
-                                                <td>8533</td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
                             </div>
-                        </ul>
+                        </div>
                     </div>
                 </div>
+                <!-- 방문자 대시보드 end-->
+
+                <!-- 게시물 대시보드 -->
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3">
+                        <h3 class="m-0 font-weight-bold text-primary">게시물 차트</h3>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="form-inline align-content-center">
+                            <!-- 버튼 -->
+                            <ul>
+                                <button class="btn btn-primary btn-icon-split" id="dailyBoard" style="padding: 5px"
+                                        onclick="updateBoardChart('daily')">일간 조회
+                                </button>
+                                <button class="btn btn-primary btn-icon-split" id="weeklyBoard" style="padding: 5px"
+                                        onclick="updateBoardChart('weekly')">주간 조회
+                                </button>
+                                <button class="btn btn-primary btn-icon-split" id="monthlyBoard" style="padding: 5px"
+                                        onclick="updateBoardChart('monthly')">월간 조회
+                                </button>
+                            </ul>
+                        </div>
+                        <hr style="height: 3px; background-color: #007bff; margin-top: 0">
+                        <div>
+                            <h1 class="h3 mb-2 text-gray-800" id="chart-title-board">일간 조회</h1>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="mr-auto form-inline" style="justify-content: center;">
+                            <div style="display: flex; justify-content: center; align-items: center; padding: 5px">
+                                <div class="mb-4" style="flex: 1; height: 400px; width: 800px;">
+                                    <canvas id="myBoardChart" style="display: block; box-sizing: border-box; height: 400px; width: 100%;" width="800" height="400"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- 게시물 대시보드 end-->
 
             </div>
             <!-- /.container-fluid -->
@@ -178,22 +188,51 @@
 </div>
 <!-- End of Page Wrapper -->
 
-<!--차트-->
+<!-- 방문자 차트-->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    // Initial data for the chart
-    const dailyData = [10, 20, 30, 40, 50, 60, 70];
-    const weeklyData = [70, 60, 50, 40, 30, 20, 10];
-    const monthlyData = [30, 40, 20, 50, 10, 60, 70];
+    function getPastDates(days) {
+        const dates = [];
+        for (let i = days - 1; i >= 0; i--) {
+            const date = new Date();
+            date.setDate(date.getDate() - i);
+            dates.push(date.toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' }));
+        }
+        return dates;
+    }
+
+    function getPastWeeks(weeks) {
+        const dates = [];
+        for (let i = weeks - 1; i >= 0; i--) {
+            const date = new Date();
+            date.setDate(date.getDate() - (i * 7));
+            dates.push(`${i}주 전`);
+        }
+        return dates;
+    }
+
+    function getPastMonths(months) {
+        const dates = [];
+        for (let i = months - 1; i >= 0; i--) {
+            const date = new Date();
+            date.setMonth(date.getMonth() - i);
+            dates.push(date.toLocaleDateString('ko-KR', { year: 'numeric', month: 'numeric' }));
+        }
+        return dates;
+    }
+
+    const dailyLabels = getPastDates(7);
+    const weeklyLabels = getPastWeeks(4);
+    const monthlyLabels = getPastMonths(12);
 
     const ctx = document.getElementById('myChart').getContext('2d');
     let myChart = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: ['월요일', '화요일', '수요일', '목요일', '금요일', '토요일', '일요일'],
+            labels: dailyLabels,
             datasets: [{
                 label: '방문자 수',
-                data: dailyData,
+                data: [],
                 backgroundColor: 'rgba(0, 123, 255, 0.2)',
                 borderColor: 'rgba(0, 123, 255, 1)',
                 borderWidth: 1
@@ -209,27 +248,93 @@
     });
 
     function updateChart(period) {
-        let newData;
-        let title;
+        let url, title, newLabels;
         switch (period) {
             case 'daily':
-                newData = dailyData;
+                url = '/data/daily';
+                newLabels = getPastDates(7);
                 title = '일간 조회';
                 break;
             case 'weekly':
-                newData = weeklyData;
+                url = '/data/weekly';
+                newLabels = getPastWeeks(4);
                 title = '주간 조회';
                 break;
             case 'monthly':
-                newData = monthlyData;
+                url = '/data/monthly';
+                newLabels = getPastMonths(12);
                 title = '월간 조회';
                 break;
         }
 
-        myChart.data.datasets[0].data = newData;
-        document.getElementById('chart-title').innerText = title;
-        myChart.update();
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                myChart.data.datasets[0].data = data;
+                myChart.data.labels = newLabels;
+                document.getElementById('chart-title').innerText = title;
+                myChart.update();
+            });
     }
+<!-- 방문자 차트 end-->
+
+<!--게시물 그래프-->
+    const ctx2 = document.getElementById('myBoardChart').getContext('2d');
+    let myBoardChart = new Chart(ctx2, {
+        type: 'line',
+        data: {
+            labels: dailyLabels,
+            datasets: [{
+                label: '게시물 수',
+                data: [],
+                backgroundColor: 'rgba(255, 0, 0, 0.2)',
+                borderColor: 'rgba(255,0,0,1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    function updateBoardChart(period) {
+        let url, title, newLabels;
+        switch (period) {
+            case 'daily':
+                url = '/data/dailyBoard';
+                newLabels = getPastDates(7);
+                title = '일간 조회';
+                break;
+            case 'weekly':
+                url = '/data/weeklyBoard';
+                newLabels = getPastWeeks(4);
+                title = '주간 조회';
+                break;
+            case 'monthly':
+                url = '/data/monthlyBoard';
+                newLabels = getPastMonths(12);
+                title = '월간 조회';
+                break;
+        }
+
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                myBoardChart.data.datasets[0].data = data;
+                myBoardChart.data.labels = newLabels;
+                document.getElementById('chart-title-board').innerText = title;
+                myBoardChart.update();
+            });
+    }
+
+    window.onload = function() {
+        updateChart('daily');
+        updateBoardChart('daily');
+    };
 </script>
 
 

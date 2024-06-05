@@ -18,6 +18,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -25,6 +26,12 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/fileAPI")
 public class FileConfigController {
+
+
+    // 파일이 저장될 경로 설정
+    @Value("${upload.path}")
+    private String uploadPath;
+
 
     @Autowired
     private FileconfigRepository fileconfigRepository;
@@ -51,12 +58,6 @@ public class FileConfigController {
         return fileconfig.orElseThrow(() -> new RuntimeException("FIle configuration not found"));
     }
 
-    // 파일이 저장될 경로 설정
-    @Value("${upload.path}")
-    private String uploadPath;
-
-//    @Autowired
-//    private UploadfileRepository uploadfileRepository;
 
     //실제 경로(로컬, no DB)에 저장
     @PostMapping("/upload")
@@ -94,43 +95,27 @@ public class FileConfigController {
     }
 
     //게시물에 등록된 파일 삭제
-    @DeleteMapping("/delete")
-    public ResponseEntity<String> deleteFile(@RequestParam("fileName") String fileName, @RequestParam("bno") Long bno) {
-        try {
-            System.out.println("등록 취소 시 여기로 와야함");
-            if(bno == 0) {
-                Path filePath = Paths.get(uploadPath, fileName);
-                System.out.println("삭제할 파일이 뭐고 : " + filePath);
-                Files.deleteIfExists(filePath);
-                return ResponseEntity.status(HttpStatus.OK).body("File deleted successfully");
-            }
-            Uploadfile file = uploadfileRepository.findByOriginalFileName(fileName, bno);
+    @DeleteMapping("/delete/{bno}")
+    public ResponseEntity<String> deleteFile(@RequestBody Map<String, List<String>> request, @PathVariable Long bno) throws IOException {
 
-            System.out.println("파일 이름 : " + fileName);
-            System.out.println("게시물 번호: " + bno);
-            //Path filePath = Paths.get(uploadPath, file.getSaved_file_name());
-            //System.out.println("파일 경로 : " + filePath);
-            //Files.deleteIfExists(filePath);
+        List<String> fileNames = request.get("files");
 
-            // 파일 엔티티도 삭제
+        if (fileNames != null && !fileNames.isEmpty()) {
+            for (String fileName : fileNames) {
+                // 파일 삭제 로직을 구현합니다.
+                // fileName과 bno를 사용하여 파일을 삭제합니다.
+                System.out.println("Deleting file: " + fileName + " for board number: " + bno);
+                Uploadfile file = uploadfileRepository.findByOriginalFileName(fileName, bno);
 
-            System.out.println("여기까지 와야함");
-            System.out.println("그러면 파일이 null인가 : " + file);
-            if (file != null) {
                 Path filePath = Paths.get(uploadPath, file.getSaved_file_name());
+                //System.out.println("파일 경로 : " + filePath);
                 Files.deleteIfExists(filePath);
-                System.out.println("파일 삭제 성공: " + fileName);
                 uploadfileRepository.delete(file);
-            } else {
-                Path filePath = Paths.get(uploadPath, fileName);
-                System.out.println("삭제할 파일이 뭐고 : " + filePath);
-                Files.deleteIfExists(filePath);
-            }
 
-            return ResponseEntity.status(HttpStatus.OK).body("File deleted successfully");
-        } catch (IOException e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("File deletion failed");
+            }
+            return ResponseEntity.ok("Files deleted successfully.");
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("No files to delete.");
         }
     }
 }

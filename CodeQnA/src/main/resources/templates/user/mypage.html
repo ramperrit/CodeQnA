@@ -61,7 +61,7 @@
 
                         <!-- 뒤로가기 버튼 -->
                         <div class="col-sm-3 text-right">
-                            <a th:href="@{/Loginmain}" class="btn btn-danger btn-icon-split">
+                            <a th:href="@{/main}" class="btn btn-danger btn-icon-split">
                                 <span class="text">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;뒤로가기&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
                             </a>
                         </div>
@@ -101,11 +101,13 @@
                         <div class="col-lg-6">
                         </div>
                     </div>
+
+
                     <!-- 탈퇴하기 버튼 -->
-                    <form method="post" action="/users/deleteUser">
-                    <div class="text-right">
-                        <button class="btn btn-secondary">탈퇴하기</button>
-                    </div>
+                    <form method="post" action="/users/deleteUser" onsubmit="confirmDeletion(event)">
+                        <div class="text-right">
+                            <button type="submit" class="btn btn-secondary">탈퇴하기</button>
+                        </div>
                     </form>
 
                 </div>
@@ -165,7 +167,7 @@
             success: function(data, textStatus, xhr) {
                 // 성공적으로 업데이트되었으므로 페이지 이동
                 alert("닉네임이 변경되었습니다.")
-                window.location.href = "/Loginmain";
+                window.location.href = "/main";
 
             },
             error: function(xhr, textStatus, errorThrown) {
@@ -174,6 +176,14 @@
             }
         });
     }
+    function confirmDeletion(event) {
+
+        var confirmation = confirm("정말로 탈퇴하시겠습니까?");
+        if (!confirmation) {
+            event.preventDefault();
+        }
+    }
+
 </script>
 </body>
 </html>

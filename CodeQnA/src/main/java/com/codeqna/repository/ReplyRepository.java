@@ -3,6 +3,8 @@ package com.codeqna.repository;
 import com.codeqna.dto.LogsViewDto;
 import com.codeqna.dto.RepliesViewDto;
 import com.codeqna.entity.Reply;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -55,4 +57,10 @@ public interface ReplyRepository extends JpaRepository<Reply, Long> {
     @Query("SELECT new com.codeqna.dto.RepliesViewDto(r,u.nickname)" +
             "FROM Reply r INNER JOIN r.user u WHERE r.recover_time BETWEEN :start AND :end")
     List<RepliesViewDto> findRepliesByRecovertimeBetween(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+
+
+    @Query("SELECT new com.codeqna.dto.RepliesViewDto(r,u.nickname)" +
+            "FROM Reply r INNER JOIN r.user u WHERE r.reply_condition = :replyCondition")
+    List<RepliesViewDto> findByReplyconditionContaining(@Param("replyCondition")  String replyCondition);
+
 }

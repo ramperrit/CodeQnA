@@ -25,6 +25,8 @@ public class ArticleResponse {
     private String nickname;
     private String email;
     private String board_condition;
+    private Long adopted_reply;
+    private Long board_adoption;
 
 
 
@@ -32,7 +34,7 @@ public class ArticleResponse {
 
 
         return new ArticleResponse(
-              board.getBno(),
+                board.getBno(),
                 board.getTitle(),
                 board.getContent(),
                 board.getHashtag(),
@@ -41,10 +43,12 @@ public class ArticleResponse {
                 board.getRegdate(),
                 board.getUser().getNickname(),
                 board.getUser().getEmail(),
-                board.getBoard_condition()
+                board.getBoard_condition(),
+                board.getAdoptedReply(),
+                board.getUser().getAdoption()
 
         );
-        //dto의 id, title,content, 해시태그set, 생성시각, email,nickname
+
     }
 
 

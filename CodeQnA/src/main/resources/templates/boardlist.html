@@ -48,6 +48,11 @@
         .search-area {
             width: 300px; /* 원하는 너비로 조정하세요 */
         }
+        /*배지 */
+        .image-small {
+            width: 30px;
+            height: 30px;
+        }
 
         /*본문 사이즈*/
         #wrapper{
@@ -140,7 +145,8 @@
                             <!-- 글 쓰기 버튼 -->
                             <div class="text-right">
                                 <a href="newboard">
-                                    <button class="btn btn-primary" href="">글 쓰기</button>
+                                    <button class="btn btn-primary" id="writeButton" href="">글 쓰기</button>
+                                    <input type="hidden" id="loggedIn" th:value="${loggedIn}">
                                 </a>
                             </div>
 
@@ -162,7 +168,17 @@
                                 <tr th:each="board : ${boards}" th:if="${board.board_condition} == 'N'" th:attr="data-url=@{'/viewboard/' + ${board.bno}}">
                                     <td th:text="${board.bno}"></td>
                                     <td th:text="${board.title}"></td>
-                                    <td th:text="${board.getUser().getNickname()}"></td>
+                                    <td>
+
+                                        <!-- Gold Badge -->
+                                        <img th:if="${board.getUser().getAdoption()} >= 50" src="/img/gold.png" class="image-small" alt="Gold Badge">
+                                        <!-- Silver Badge -->
+                                        <img th:if="${board.getUser().getAdoption()} >= 30 and ${board.getUser().getAdoption()} < 50" src="/img/silver.png" class="image-small" alt="Silver Badge">
+                                        <!-- Bronze Badge -->
+                                        <img th:if="${board.getUser().getAdoption()} >= 15 and ${board.getUser().getAdoption()} < 30" src="/img/bronze.png" class="image-small" alt="Bronze Badge">
+                                        <!-- 닉네임 출력 -->
+                                        <span th:text="${board.user.nickname}"></span>
+                                    </td>
                                     <td th:text="${board.hashtag}"></td>
                                     <td th:text="${board.hitcount}"></td>
                                     <td th:text="${board.heart}"></td>
@@ -283,7 +299,26 @@
                     var newRow = $('<tr>').appendTo(tbody);
                     $('<td>').text(board.bno).appendTo(newRow);
                     $('<td>').text(board.title).appendTo(newRow);
-                    $('<td>').text(board.nickname).appendTo(newRow);
+                    // $('<td>').text(board.user.nickname).appendTo(newRow);
+
+
+                    // 배지 이미지와 닉네임을 표시할 셀 생성
+                    var userCell = $('<td>').appendTo(newRow);
+
+                    // 채택 수에 따라 배지 이미지 선택
+                    var adoptionCount = board.user.adoption;
+                    var badgeImage = '';
+                    if (adoptionCount >= 50) {
+                        badgeImage = '<img src="/img/gold.png" class="image-small" alt="Gold Badge">';
+                    } else if (adoptionCount >= 30) {
+                        badgeImage = '<img src="/img/silver.png" class="image-small" alt="Silver Badge">';
+                    } else if (adoptionCount >= 15) {
+                        badgeImage = '<img src="/img/bronze.png" class="image-small" alt="Bronze Badge">';
+                    }
+
+                    // 배지 이미지와 닉네임을 셀에 추가
+                    userCell.html(badgeImage + '<span>' + board.user.nickname + '</span>');
+
                     $('<td>').text(board.hashtag).appendTo(newRow);
                     $('<td>').text(board.hitcount).appendTo(newRow);
                     $('<td>').text(board.heart).appendTo(newRow);
@@ -343,7 +378,28 @@
         return year + '-' + month + '-' + day + ' ' + hours + ':' + minutes + ':' + seconds;
     }
 </script>
+<script>
 
+    // DOM이 로드된 후 글쓰기 버튼에 이벤트 리스너 추가
+    document.addEventListener('DOMContentLoaded', function() {
+        const writeButton = document.getElementById('writeButton');
+        writeButton.addEventListener('click', function(event){
+            const loggedInValue = document.querySelector("#loggedIn").value;
+            console.log(loggedInValue);
+            const loggedIn = loggedInValue === "true"; // 문자열 "true"를 boolean 값으로 변환
+            if (!loggedIn) {
+                // 경고창 표시
+                if (confirm("로그인한 사용자만 글을 작성할 수 있습니다. 로그인하시겠습니까?")) {
+                    // 확인 버튼을 클릭한 경우 로그인 페이지로 이동
+                    window.location.href = '/users/login';
+                }
+                // 이벤트 기본 동작 막기 (로그인하지 않은 경우 글쓰기 페이지로의 기본 이동 방지)
+                event.preventDefault();
+            }
+
+        });
+    });
+</script>
 </body>
 
 </html>

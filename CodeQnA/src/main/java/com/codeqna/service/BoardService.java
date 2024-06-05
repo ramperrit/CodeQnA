@@ -1,5 +1,6 @@
 package com.codeqna.service;
 
+import com.codeqna.Exception.UnauthorizedAccessException;
 import com.codeqna.dto.AddBoardRequest;
 import com.codeqna.dto.BoardViewDto;
 import com.codeqna.dto.LogsViewDto;
@@ -8,6 +9,8 @@ import com.codeqna.entity.*;
 import com.codeqna.repository.*;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,6 +21,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Transactional
@@ -86,17 +90,19 @@ public class BoardService {
         return savedBoard;
     }
 
-    public Board modify(ModifyBoardRequest request){
+    public Board modify(ModifyBoardRequest request, String loginEmail){
         // 기존 게시물을 가져옴
         Board existingBoard = boardRepository.findById(request.getBno()).orElse(null);
         if (existingBoard == null) {
             // 기존 게시물이 존재하지 않는 경우 예외 처리 또는 새로운 게시물로 처리
             throw new EntityNotFoundException("게시물을 찾을 수 없습니다.");
         }
+        if(!existingBoard.getUser().getEmail().equals(loginEmail)){
+            throw new UnauthorizedAccessException("작성자만 게시글 수정 가능합니다.");
+        }
 
         // 기존 게시물의 정보를 수정
         existingBoard.setTitle(request.getTitle());
-        existingBoard.setNickname(request.getNickname());
         existingBoard.setContent(request.getContent());
         existingBoard.setHashtag(request.getHashtag());
         existingBoard.setHeart(request.getHeart());
@@ -124,12 +130,41 @@ public class BoardService {
     }
 
     //게시물 삭제
-    public void deleteBoard(Long bno) {
+    public void deleteBoard(Long bno, String loginEmail) {
+        System.out.println("요까지2");
+        Board board = boardRepository.findByBno(bno);
+        if(board.getUser().getEmail().equals(loginEmail)){
+            board.deleteBoard();
+        }else{
+            throw new UnauthorizedAccessException("작성자만 게시글 삭제 가능합니다.");
+        }
+
+    }
+
+    // 관리자가 게시물 삭제
+    public void deleteAdminBoard(Long bno) {
         System.out.println("요까지2");
         Board board = boardRepository.findByBno(bno);
 
+        // 기존 로그를 찾음
+        Logs existingLog = logsRepository.findByBoard(board);
+
+        if (existingLog != null) {
+            // 기존 로그가 있을 경우 업데이트
+            existingLog.setDelete_time(LocalDateTime.now());
+            existingLog.setRecover_time(null);
+            logsRepository.save(existingLog);
+        } else {
+            // 기존 로그가 없을 경우 새 로그 생성
+            Logs newLog = new Logs();
+            newLog.setBoard(board);
+            newLog.setDelete_time(LocalDateTime.now());
+            logsRepository.save(newLog);
+        }
+
         board.deleteBoard();
     }
+
 
     //게시물 좋아요
     public void increaseHeart(Long bno) {
@@ -322,12 +357,38 @@ public class BoardService {
         }
     }
 
-//    public void adoptReply(Long bno, Long rno) {
-//        Board board = boardRepository.findByBno(bno);
-//        board.setAdoptedReply(rno);
-//        Reply reply = replyRepository.findById(rno).orElseThrow();
-//        reply.setAdopted("Y");
-//    }
+    public void adoptReply(Long bno, Long rno,String loginEmail) {
+        Board board = boardRepository.findByBno(bno);
+        String boardEmail = board.getUser().getEmail();
+        if(boardEmail.equals(loginEmail)){
+            board.setAdoptedReply(rno);
+            Reply reply = replyRepository.findById(rno).orElseThrow();
+            reply.setAdopted("Y");
+            String replyEmail = reply.getUser().getEmail();
+            Users user = userRepository.findByEmail(replyEmail).orElseThrow();
+            user.setAdoption(user.getAdoption()+1);
+        }else{
+            throw new UnauthorizedAccessException("작성자만 답변 채택 가능합니다.");
+        }
+
+
+
+    }
+    public long getTotalCount() {
+        return boardRepository.countByBoard_condition("N");
+    }
+
+    public Optional<Board> getPreviousActiveBoard(Long bno) {
+        Pageable pageable = PageRequest.of(0, 1);
+        List<Board> result = boardRepository.findPreviousActiveBoard(bno, pageable);
+        return result.isEmpty() ? Optional.empty() : Optional.of(result.get(0));
+    }
+
+    public Optional<Board> getNextActiveBoard(Long bno) {
+        Pageable pageable = PageRequest.of(0, 1);
+        List<Board> result = boardRepository.findNextActiveBoard(bno, pageable);
+        return result.isEmpty() ? Optional.empty() : Optional.of(result.get(0));
+    }
 
 
 }

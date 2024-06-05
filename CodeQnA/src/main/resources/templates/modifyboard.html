@@ -34,7 +34,7 @@
 
 <body>
 <input id="bno" type="hidden" th:value="${board.bno}">
-<input id="nickname" type="hidden" th:value="${board.nickname}">
+<!--<input id="nickname" type="hidden" th:value="${board.getUser().getNickname()}">-->
 <input id="heart" type="hidden" th:value="${board.heart}">
 <input id="hitcount" type="hidden" th:value="${board.hitcount}">
 
@@ -230,7 +230,7 @@
                 // 유효성 검사 실패 시 경고 메시지 표시
                 alert('한글이나 영어 10글자 이내로 입력해주세요');
             }
-        });
+        }
 
         // 삭제 버튼 클릭 시
         $(document).on('click', '.btn-icon-split', function(){
@@ -242,13 +242,12 @@
 
 <!-- 드롭존 스크립트 -->
 <script>
-    Dropzone.autoDiscover = false;
+    document.addEventListener("DOMContentLoaded", async function() {
+        let uploadFiles = []; // 업로드할 파일 정보를 저장할 배열
+        let uploadedFiles = []; // 기존 업로드된 파일 정보를 저장할 배열
+        let deletedFiles = []; // 삭제될 파일 정보를 저장할 배열
+        var bno = document.getElementById("bno").value;
 
-    let uploadedFiles = []; // 업로드된 파일 정보를 저장할 배열
-    let deletedFiles = []; // 삭제된 파일 정보를 저장할 배열
-    var bno = document.getElementById("bno").value;
-
-    async function setDropzone() {
         try {
             // 기존 파일 목록을 가져옴
             const response = await fetch(`/fileAPI/files/${bno}`);
@@ -268,22 +267,36 @@
                 maxFiles: maxFiles, // 업로드 파일수
                 maxFilesize: maxFilesize, // 최대업로드용량
                 acceptedFiles: acceptedFiles, // 이미지 파일 포맷만 허용
+                parallelUploads: maxFiles, //동시에 업로드할 수 있는 파일 업로드 수
+                autoProcessQueue: false,
                 success: function(file, response) {
-                    console.log(response);
-                    uploadedFiles.push(response);
-                    console.log("업로드 시 추가된 파일 목록 : " + uploadedFiles);
-                    file.savedFileName = response.savedFileName;
+                    //console.log(response);
+                    uploadFiles.push(response);
+                    //console.log("업로드 시 추가된 파일 목록 : " + uploadedFiles);
+                    // Check if all files have been uploaded
+                    if (myDropzone.getQueuedFiles().length === 0 && myDropzone.getUploadingFiles().length === 0) {
+                        modifyboard(); // All files uploaded, submit the form
+                    }
                 },
                 error: function(file, errorMessage) {
                     console.error(errorMessage);
                 },
                 removedfile: function(file) {
                     let fileName = file.savedFileName;
-                    console.log("이게 컨트롤러에 보내질 파일 이름: " + fileName);
+                    console.log("설마 이게 null이여서 로그 안뜸?");
+                    console.log(fileName);
 
                     if (fileName) {
-                        deletedFiles.push(fileName);
-                        uploadedFiles = uploadedFiles.filter(f => f.savedFileName !== fileName);
+                        console.log("uploadedFiles : " + uploadedFiles);
+                        if (uploadedFiles.includes(fileName)) {
+                            deletedFiles.push(fileName);
+                            //uploadedFiles = uploadedFiles.filter(f => f !== fileName);
+                            console.log("삭제될 기존 파일 : " + deletedFiles);
+                        }
+
+                        let _ref;
+                        return (_ref = file.previewElement) != null ? _ref.parentNode.removeChild(file.previewElement) : void 0;
+                    } else {
                         let _ref;
                         return (_ref = file.previewElement) != null ? _ref.parentNode.removeChild(file.previewElement) : void 0;
                     }
@@ -296,8 +309,12 @@
                 myDropzone.emit("addedfile", mockFile);
                 myDropzone.emit("complete", mockFile);
 
+                //업로드된 파일
+                uploadedFiles.push(file.savedFileName);
+                console.log("기존에 업로드된 파일 : " + uploadedFiles);
+
                 // 저장된 파일의 URL을 설정하여 썸네일 이미지를 보여줄 수 있음
-                myDropzone.emit("thumbnail", mockFile, `http://localhost:8080/image_qna/${file.savedFileName}`);
+                myDropzone.emit("thumbnail", mockFile, `http://222.119.100.90:8213/image_qna/${file.savedFileName}`);
 
                 myDropzone.files.push(mockFile);
             });
@@ -319,85 +336,109 @@
                 }
             });
 
+            const modifyButton = document.getElementById("modify-button");
+
+            if (modifyButton) {
+                modifyButton.addEventListener("click", async (event) => {
+                    event.preventDefault();
+                    let content = editor.getHTML();
+
+                    // 제목, 내용 입력 여부 확인
+                    if (document.getElementById("title").value.trim() === '') {
+                        alert('제목을 입력하세요.');
+                        return;
+                    }else if(content === '<p><br></p>'){
+                        alert('내용을 입력하세요.');
+                        return;
+                    }
+
+                    console.log("json 데이터가 어떤식으로 전달? : " + deletedFiles);
+
+                    if(deletedFiles) {
+                        fetch(`/fileAPI/delete/${bno}`, {
+                            method: "DELETE",
+                            headers: {
+                                "Content-Type": "application/json",
+                            },
+                            body: JSON.stringify({
+                                files: deletedFiles,
+                            }),
+                        })
+                            .then(() => {
+                                //alert("등록 완료되었습니다.");
+                                //location.replace("/main");
+                            })
+                            .catch(() => {
+                                alert("삭제에 실패했습니다.");
+                            });
+                    }
+
+                    if (myDropzone.getQueuedFiles().length > 0) {
+                        myDropzone.processQueue(); // Process the queue and upload files
+                    } else {
+                        modifyboard(); // No files to upload, submit the form directly
+                    }
+                });
+            }
+
         } catch (error) {
             console.error('Failed to fetch file config:', error);
         }
-    }
 
-    document.addEventListener("DOMContentLoaded", function() {
-        setDropzone();
-    });
-</script>
-
-<script>
-    const modifyButton = document.getElementById("modify-button");
-
-    if (modifyButton) {
-        modifyButton.addEventListener("click", async (event) => {
-            event.preventDefault();
-
-            let content = editor.getHTML();
-            // 정규표현식을 사용하여 주민등록번호를 찾아 마스킹 처리
-            content = content.replace(/\b(\d{6})(\d{7})\b/g, function(_, p1, p2) {
-                return p1 + '*******';
-            });
-            content = content.replace(/\b(\d{6})[- ]?(\d{7})\b/g, function(_, p1, p2) {
-                return p1 + (p2 ? '-*******' : '*******');
-            });
-
-            let hashtags = "";
-            const hashtagElements = document.querySelectorAll('.hashtag-list .btn-primary');
-            hashtagElements.forEach((element, index) => {
-                const hashtagText = element.querySelector('.text').innerText;
-                hashtags += hashtagText;
-            });
-
-            // 제목, 내용 입력 여부 확인
-            if (document.getElementById("title").value.trim() === '') {
-                alert('제목을 입력하세요.');
-                return;
-            }else if(content === '<p><br></p>'){
-                alert('내용을 입력하세요.');
-                return;
-            }
-
+        async function modifyboard() {
             try {
-                await Promise.all(deletedFiles.map(fileName => {
-                    return fetch(`/fileAPI/delete?fileName=${encodeURIComponent(fileName)}&bno=${bno}`, {
-                        method: 'DELETE'
-                    }).then(response => response.text());
-                }));
-
-                const response = await fetch("/boardAPI/modify", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({
-                        bno: document.getElementById("bno").value,
-                        title: document.getElementById("title").value,
-                        nickname: document.getElementById("nickname").value,
-                        content: content,
-                        hashtag: hashtags,
-                        heart: document.getElementById('heart').value,
-                        hitcount: document.getElementById('hitcount').value,
-                        board_condition: "N",
-                        files: uploadedFiles,
-                    })
+                let content = editor.getHTML();
+                // 정규표현식을 사용하여 주민등록번호를 찾아 마스킹 처리
+                content = content.replace(/\b(\d{6})(\d{7})\b/g, function(_, p1, p2) {
+                    return p1 + '*******';
+                });
+                content = content.replace(/\b(\d{6})[- ]?(\d{7})\b/g, function(_, p1, p2) {
+                    return p1 + (p2 ? '-*******' : '*******');
                 });
 
-                if (response.ok) {
-                    alert("수정 완료되었습니다.");
-                    location.replace("/viewboard/" + bno);
-                } else {
-                    alert("수정 실패했습니다.");
+                let hashtags = "";
+                const hashtagElements = document.querySelectorAll('.hashtag-list .btn-primary');
+                hashtagElements.forEach((element, index) => {
+                    const hashtagText = element.querySelector('.text').innerText;
+                    hashtags += hashtagText;
+                });
+
+                try {
+                    const response = await fetch("/boardAPI/modify", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                            bno: document.getElementById("bno").value,
+                            title: document.getElementById("title").value,
+                            // nickname: document.getElementById("nickname").value,
+                            content: content,
+                            hashtag: hashtags,
+                            heart: document.getElementById('heart').value,
+                            hitcount: document.getElementById('hitcount').value,
+                            board_condition: "N",
+                            files: uploadFiles,
+                        })
+                    });
+
+                    if (response.ok) {
+                        alert("수정 완료되었습니다.");
+                        location.replace("/viewboard/" + bno);
+                    } else {
+                        alert("수정 실패했습니다.");
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert("수정 중 오류 발생");
                 }
+
             } catch (error) {
                 console.error('Error:', error);
                 alert("수정 중 오류 발생");
             }
-        });
-    }
+        }
+    });
 </script>
 
 </body>

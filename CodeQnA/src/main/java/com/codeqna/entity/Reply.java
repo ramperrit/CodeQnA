@@ -57,14 +57,14 @@ public class Reply {
     @Column(name = "recover_time")
     private LocalDateTime recover_time;
 
-//    @ColumnDefault("N")
-//    private String adopted;
+    private String adopted;
 
     private Reply(Board board, Users user, Long parentCommentId, String content) {
         this.board = board;
         this.user = user;
         this.parentCommentId = parentCommentId;
         this.content = content;
+        this.adopted = "N";
 
     }
 
@@ -79,7 +79,10 @@ public class Reply {
 
     public void deleteReply(){
         this.reply_condition="Y";
+        this.delete_time = LocalDateTime.now();
+        this.recover_time = null;
     }
+
 
 
 
